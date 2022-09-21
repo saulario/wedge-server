@@ -3,7 +3,7 @@ import logging
 import threading
 import time
 
-from types import Union
+from typing import Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
@@ -48,6 +48,12 @@ class AccountDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+    
+    def insert(self, conn:Connection, entity:Account) -> Account:
+        delattr(entity, "id")
+        result = super().insert(conn, entity)
+        entity.id = result[0]
+        return entity
 
     def read(self, conn:Connection, id:int, projection=None) -> Union[Account,None]:
         """

@@ -67,11 +67,6 @@ class BaseDAL():
         self._t = Table(nombre, metadata, autoload = True)
         self._type = type
 
-        #marcamos como solo lectura los campos de autoincremento
-        for colum in self._t.c:
-            if colum.autoincrement != False:
-                self._t._columns[colum.name].server_default="fnord"
-
     def comprobarValores(self, entity:Entity):
         """
         Para poder implementar en subclases el método de comprobación de valores sin
@@ -90,9 +85,9 @@ class BaseDAL():
         """
         t1 = time.time()
         stmt = self._t.insert(None).values(entity.__dict__)
-        conn.execute(stmt)
+        result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
-        return entity
+        return result.inserted_primary_key
 
     def queryEntities(self, conn:Connection, stmt):
         """
@@ -129,7 +124,7 @@ class BaseDAL():
         Devuelve una fila leída con una sentencia preparada. Se asume que
         se lee por PK y devuelve un valor único
         """
-        return Entity.fromProxy(conn.execute(stmt).fetchone(), self.type)
+        return Entity.fromProxy(conn.execute(stmt).fetchone(), self._type)
 
     def select(self, projection=None):
         """
