@@ -7,7 +7,7 @@ import wedge.model.ctl.account
 
 
 if __name__ == "__main__":
-    engine = sqlalchemy.create_engine("postgresql+psycopg2://ctl:Cursomania@localhost:5432/wedge_ctl")
+    engine = sqlalchemy.create_engine("postgresql+psycopg2://x:x@localhost:5432/wedge_ctl")
     metadata = sqlalchemy.MetaData(bind=engine)
 
     conn = engine.connect()
