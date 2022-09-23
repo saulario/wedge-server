@@ -1,31 +1,27 @@
 #!/usr/bin/python3
 import datetime as dt
+import uuid
 
 import sqlalchemy
 
-import wedge.model.ctl.account
+import wedge.model.ctl.ses
 
 
 if __name__ == "__main__":
-    engine = sqlalchemy.create_engine("postgresql+psycopg2://x:x@localhost:5432/wedge_ctl")
+    engine = sqlalchemy.create_engine("postgresql+psycopg2://ctl:123456@localhost:5432/wedge_ctl")
     metadata = sqlalchemy.MetaData(bind=engine)
+
+    u = uuid.uuid4()
 
     conn = engine.connect()
 
-    accountDAL = wedge.model.ctl.account.getDAL(metadata)
-    account = wedge.model.ctl.account.Account()
-    account.id = 0
-    account.username = "Nombre del usuario"
-    account.email = "saulario@elusuario.com"
-    account.password = "password"
-    account.active = 1
-    account.creation_date = dt.datetime.utcnow()
+    dal = wedge.model.ctl.ses.getDAL(metadata)
+    e = wedge.model.ctl.ses.Ses()
 
-    ac1 = accountDAL.insert(conn, account)
+    e.sesusrid = 1
+    e.sesinsid = 1
+    e.sesfcr = e.sesful = dt.datetime.utcnow()
 
-    ac2 = accountDAL.read(conn, 2)
-    ac2.id = 2
-    ac2.username = "saulario " + dt.datetime.utcnow().isoformat()
-    result = accountDAL.update(conn, ac2)
+    dal.insert(conn, e)
 
     conn.close()

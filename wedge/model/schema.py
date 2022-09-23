@@ -2,7 +2,9 @@
 import logging
 import time
 
-from sqlalchemy import Table
+from typing import Any
+
+from sqlalchemy import MetaData, Table
 from sqlalchemy.engine import Connection
 from sqlalchemy.sql import expression
 
@@ -55,7 +57,7 @@ class BaseDAL():
     Clase base para los artefactos de acceso a base de datos
     """
 
-    def __init__(self, metadata, nombre:str, type=Entity):
+    def __init__(self, metadata:MetaData, nombre:str, type:Any=Entity):
         """
         Reconstruye un objeto tabla por instrospección a partir de los
         metadatos del engine de base de datos

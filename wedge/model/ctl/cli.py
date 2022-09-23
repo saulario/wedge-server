@@ -7,6 +7,7 @@ from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
+from sqlalchemy.schema import Column
 
 import wedge.model.schema
 
@@ -55,7 +56,7 @@ class CliDAL(wedge.model.schema.BaseDAL):
         entity.cliid = result[0]
         return entity
 
-    def read(self, conn:Connection, cliid:int, projection=None) -> Union[Cli,None]:
+    def read(self, conn:Connection, cliid:int, projection:Union[List[Column], None]=None) -> Union[Cli,None]:
         """
         Lectura por PK
         """
