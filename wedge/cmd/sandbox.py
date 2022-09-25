@@ -4,11 +4,18 @@ import uuid
 
 import sqlalchemy
 
+import wedge.core.engine
+import wedge.core.i18n as i18n
 import wedge.model.ctl.ses
 
 
 if __name__ == "__main__":
-    engine = sqlalchemy.create_engine("postgresql+psycopg2://ctl:123456@localhost:5432/wedge_ctl")
+
+    m1 = i18n.get_message(wedge.core.engine.Session(i18n="es_ES"), "G00001")
+    m1 = i18n.get_message(wedge.core.engine.Session(i18n="es_ES"), "G00002")
+    m1 = i18n.get_message(wedge.core.engine.Session(i18n="en_EN"), "G00001")
+
+    engine = sqlalchemy.create_engine("postgresql+psycopg2://devel:devel@localhost:5432/wedge_ctl")
     metadata = sqlalchemy.MetaData(bind=engine)
 
     u = uuid.uuid4()

@@ -13,7 +13,9 @@ create table usr (
         usrcod          varchar(200) not null,
         usrnom          varchar(200) not null,
         usrpwd          varchar(200) not null,
-        usrfcr          timestamp
+        usrfcr          timestamp,
+        usri18          varchar(10),
+        usract          smallint
 );
 
 comment on table usr is         'Usuarios';
@@ -22,6 +24,8 @@ comment on column usr.usrcod is 'Código de usuario';
 comment on column usr.usrnom is 'Nombre';
 comment on column usr.usrpwd is 'Contraseña';
 comment on column usr.usrfcr is 'Fecha creación';
+comment on column usr.usri18 is 'Internacionalización';
+comment on column usr.usract is 'Activo/inactivo';
 
 create unique index usr_ix_01 on usr(usrcod);
 
@@ -43,13 +47,15 @@ comment on column cli.clinom is 'Nombre';
 create table ins (
     insid       bigserial primary key,
     insnom      varchar(40) not null,
-    inscliid    bigint not null
+    inscliid    bigint not null,
+    insurl      text
 );
 
 comment on table ins is             'Instancias';
 comment on column ins.insid is      'Id. secuencia';
 comment on column ins.insnom is     'Nombre';
 comment on column ins.inscliid is   'Id. de cliente';
+comment on column ins.insurl is     'Database URL';
 
 create index ins_ix_01 on ins(inscliid);
 
