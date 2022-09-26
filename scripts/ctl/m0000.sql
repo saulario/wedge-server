@@ -93,7 +93,8 @@ create table ses (
     sesusrid    bigint not null,
     sesinsid    bigint not null,
     sesfcr      timestamp not null,
-    sesful      timestamp not null
+    sesful      timestamp not null,
+    sesact      smallint not null
 );
 
 comment on table ses is             'Sesiones';
@@ -102,6 +103,7 @@ comment on column ses.sesusrid is   'Id. de usuario';
 comment on column ses.sesinsid is   'Id. de instancia';
 comment on column ses.sesfcr is     'Fecha de creación';
 comment on column ses.sesful is     'Fecha de última modificación';
+comment on column ses.sesact is     'Activa/inactiva';
 
 create index ses_ix_01 on ses(sesfcr);
 create index ses_ix_02 on ses(sesful);

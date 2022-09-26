@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import hashlib
 import logging
 import threading
 import time
@@ -36,6 +37,36 @@ class UsrDAL(wedge.model.schema.BaseDAL):
 
     def __init__(self, metadata, nombre = "usr"):
         super().__init__(metadata, nombre, type=Usr)
+
+    def autenticar(self, conn:Connection, username:str, password:str) -> Union[Usr, None]:
+        """
+        Autentica un usuario.
+            :param  conn:       Conexión a base de datos de control
+            :param  username:   Usuario
+            :param  password:   Contraseña
+            :return:            Usr sin password
+        """
+        log.debug("-----> Inicio")
+        log.debug("\t((username): %s", username)
+        log.debug("\t((password): %s", "*" * len(password or ""))
+        
+        retval = None
+
+        stmt = self.select().where(and_(
+                self.t.c.usrcod == username,
+                self.t.c.usrpwd == hashlib.sha256(password.encode("utf-8")).hexdigest(),
+                self.t.c.usract == 1,
+            ))
+        result = self.query(conn, stmt)
+        if len(result) != 1:
+            log.info("<----- Salida, no encontrado el usuario")
+            return retval
+
+        retval = wedge.model.schema.Entity.fromProxy(result[0], self._type)
+        delattr(retval, "usrpwd")
+
+        log.debug("<----- Fin")
+        return retval
 
     def delete(self, conn:Connection, usrid:int) -> int:
         """

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import logging
+import random
 import threading
 import time
 import uuid
@@ -52,10 +53,36 @@ class SesDAL(wedge.model.schema.BaseDAL):
         return result.rowcount
     
     def insert(self, conn:Connection, entity:Ses) -> Ses:
-        entity.sescod = str(uuid.uuid4())
+        """
+        Inserción generando una PK forzada
+        """
+        entity.sescod = uuid.uuid4().hex + "{:08x}".format(random.randrange(0, 4294967295)) 
         result = super().insert(conn, entity)
         entity.sescod = result[0]
         return entity
+
+    def invalidarSesiones(self, conn:Connection, usrid:int) -> int:
+        """
+        Invalida todas las sesiones que pudiera tener abiertas el usuario antes de asignar
+        un nuevo objeto sesión.
+            :param  conn:   Conexión a base de datos de control
+            :param  usrid:  Id de usuario
+            :return:        Número de sesiones cerradas
+        """
+        log.debug("-----> Inicio")
+        log.debug("\t(usrid): %d", usrid)
+
+        ses = {
+            "sesact" : 0
+        }
+        stmt = self.t.update(None).values(ses).where(and_(
+                self.t.c.sesusrid == usrid,
+                self.t.c.sesact == 1
+            ))
+        result = conn.execute(stmt)
+
+        log.debug("<----- Fin")
+        return result.rowcount
 
     def read(self, conn:Connection, sescod:int, projection:Union[List[Column], None]=None) -> Union[Ses,None]:
         """
