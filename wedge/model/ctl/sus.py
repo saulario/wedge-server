@@ -5,18 +5,21 @@ import time
 
 from typing import List, Union
 
+import sqlalchemy
+
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
 from sqlalchemy.schema import Column
 
+import wedge.model.ctl.ins
 import wedge.model.schema
+
 
 log = logging.getLogger(__name__)
 
 
 # singleton
 _dal = None
-
 
 def getDAL(metadata):
     global _dal
@@ -81,3 +84,31 @@ class SusDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+
+    def suscripcionesDeUsuario(self, con:Connection, sususrid:int) -> List[wedge.model.ctl.ins.Ins]:
+        """
+        Devuelve las suscripciones a instancias activas asociadas a un usuario. Sustituye la URL por
+        una instancia de engine de la base de datos.
+            :param  con:        Conexión a base de datos
+            :param  sususrid:   Id. de Usuario
+            :return:            Lista de instancias
+        """
+        log.debug("-----> Inicio")
+        log.debug("\t(sususrid): %d", sususrid)
+
+        insDAL = wedge.model.ctl.ins.getDAL(self._metadata) 
+
+        sus_t = self.t
+        ins_t = insDAL.t
+
+        stmt = ins_t.select().join(sus_t).where(and_(
+            sus_t.c.sususrid == sususrid,
+            sus_t.c.susact == 1,
+        ))
+        result = insDAL.queryEntities(con, stmt)
+        for r in result:
+            setattr(r, "engine", sqlalchemy.create_engine(r.insurl))
+            delattr(r, "insurl")
+
+        log.debug("<----- Fin")
+        return result

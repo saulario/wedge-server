@@ -8,7 +8,9 @@ import sqlalchemy.engine
 from sqlalchemy import and_
 
 import wedge.core.engine as engine
+import wedge.model.ctl.ins
 import wedge.model.ctl.ses
+import wedge.model.ctl.sus
 import wedge.model.ctl.usr
 
 
@@ -40,8 +42,8 @@ class UsrBL():
             :return:            Sesión iniciada
         """
         log.info("-----> Inicio")
-        log.info("\t((username): %s", username)
-        log.info("\t((password): %s", "*" * len(password or ""))
+        log.info("\t(username): %s", username)
+        log.info("\t(password): %s", "*" * len(password or ""))
 
         retval = None
         if not username or not password:
@@ -55,6 +57,9 @@ class UsrBL():
 
         sesDAL = wedge.model.ctl.ses.getDAL(context.metadata)
         sesDAL.invalidarSesiones(ctlConn, usr.usrid)
+
+        susDAL = wedge.model.ctl.sus.getDAL(context.metadata)
+        susList = susDAL.suscripcionesDeUsuario(ctlConn, usr.usrid)
 
 
         log.info("<----- Fin")

@@ -47,8 +47,8 @@ class UsrDAL(wedge.model.schema.BaseDAL):
             :return:            Usr sin password
         """
         log.debug("-----> Inicio")
-        log.debug("\t((username): %s", username)
-        log.debug("\t((password): %s", "*" * len(password or ""))
+        log.debug("\t(username): %s", username)
+        log.debug("\t(password): %s", "*" * len(password or ""))
         
         retval = None
 
