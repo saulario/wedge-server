@@ -91,7 +91,7 @@ alter table sus add constraint sus_fk_02 foreign key(susinsid) references ins(in
 create table ses (
     sescod      varchar(40) not null primary key,
     sesusrid    bigint not null,
-    sesinsid    bigint not null,
+    sesinsid    bigint,
     sesfcr      timestamp not null,
     sesful      timestamp not null,
     sesact      smallint not null

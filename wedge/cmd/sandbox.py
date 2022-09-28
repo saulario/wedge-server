@@ -1,9 +1,9 @@
 #!/usr/bin/python3
-import datetime as dt
 import logging, logging.handlers
 import sys
 
 import wedge.bl.ctl.usr
+import wedge.model.ctl.usr
 import wedge.core.engine
 
 
@@ -27,13 +27,13 @@ if __name__ == "__main__":
     log.info("-----> Inicio")
 
 
-
     conn = ctx.engine.connect()
+    usrBL = wedge.bl.ctl.usr.getBL()
 
-    wedge.bl.ctl.usr.getBL().login(conn, "saulario", "123456", ctx)
+    session = usrBL.login(conn, "saulario", "123456", ctx)
 
-
-
+    s1 = usrBL.getSession(conn, session.ses.sescod, ctx)
 
     conn.close()
+
     log.info("<----- Fin")

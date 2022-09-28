@@ -3,11 +3,12 @@ import configparser
 import logging
 import os, os.path
 
-from typing import Union
+from typing import List, Union
 
 import sqlalchemy
 import sqlalchemy.engine
 
+import wedge.model.ctl
 
 log = logging.getLogger(__name__)
 
@@ -52,12 +53,18 @@ def create_context(file:str = None) -> Union[Context, None]:
 
 class Session():
     """
-    Sesión activa
-    """
-    
-    def __init__(self, **kwargs):
-        self.i18n:str = kwargs.get("i18n", None)
+    Sesión activa contiene la siguiente información
+        1. Usuario
+        2. Lista de instancias a las que está suscrito
+        3. Instancia activa
 
+    """    
+    def __init__(self, **kwargs):
+        """
+        """
+        self.usr:wedge.model.ctl.Usr = kwargs.get("usr", None)
+        self.ses:wedge.model.ctl.Ses = kwargs.get("ses", None)
+        self.insList:List[wedge.model.ctl.Ins] = kwargs.get("insList", [])
 
 def Transaction(f):
     """
