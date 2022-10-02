@@ -50,6 +50,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(username): %s", username)
         log.debug("\t(password): %s", "*" * len(password or ""))
         
+        t1 = time.time()
         retval = None
 
         stmt = self.select().where(and_(
@@ -58,6 +59,9 @@ class UsrDAL(wedge.model.schema.BaseDAL):
                 self.t.c.usract == 1,
             ))
         result = self.query(conn, stmt)
+        
+        log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
+
         if len(result) != 1:
             log.info("<----- Salida, no encontrado el usuario")
             return retval

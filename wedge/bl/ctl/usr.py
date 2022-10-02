@@ -34,7 +34,7 @@ def getBL():
 
 class UsrBL():
 
-    def getSession(self, con:sqlalchemy.engine.Connection, token:str,
+    def CheckSession(self, con:sqlalchemy.engine.Connection, token:str,
             context:engine.Context) -> Union[engine.Session, None]:
         """
         Recupera una sesión si el token es válido. Si algo falla devuelve la sesión a nulo
@@ -73,7 +73,7 @@ class UsrBL():
         log.info("<----- Fin")
         return retval
 
-    def login(self, con:sqlalchemy.engine.Connection, username:str, password:str, 
+    def Login(self, con:sqlalchemy.engine.Connection, username:str, password:str, 
             context:engine.Context) -> Union[engine.Session, None]:
         """
         Abre una sesión si autentica el usuario. Si algo falla devuelve la sesión a nulo

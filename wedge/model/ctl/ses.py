@@ -76,11 +76,14 @@ class SesDAL(wedge.model.schema.BaseDAL):
         ses = {
             "sesact" : 0
         }
+
+        t1 = time.time()
         stmt = self.t.update(None).values(ses).where(and_(
                 self.t.c.sesful < flimit,
                 self.t.c.sesact == 1
             ))
         result = con.execute(stmt)
+        log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
 
         log.debug("<----- Fin")
         return result.rowcount        
@@ -99,11 +102,14 @@ class SesDAL(wedge.model.schema.BaseDAL):
         ses = {
             "sesact" : 0
         }
+
+        t1 = time.time()        
         stmt = self.t.update(None).values(ses).where(and_(
                 self.t.c.sesusrid == usrid,
                 self.t.c.sesact == 1
             ))
         result = con.execute(stmt)
+        log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })        
 
         log.debug("<----- Fin")
         return result.rowcount

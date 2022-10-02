@@ -30,9 +30,9 @@ if __name__ == "__main__":
     conn = ctx.engine.connect()
     usrBL = wedge.bl.ctl.usr.getBL()
 
-    session = usrBL.login(conn, "saulario", "123456", ctx)
+    session = usrBL.Login(conn, "saulario", "123456", ctx)
 
-    s1 = usrBL.getSession(conn, session.ses.sescod, ctx)
+    s1 = usrBL.CheckSession(conn, session.ses.sescod, ctx)
 
     conn.close()
 

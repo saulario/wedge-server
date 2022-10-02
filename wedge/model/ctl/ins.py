@@ -96,6 +96,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
         log.debug("-----> Inicio")
         log.debug("\t(sususrid): %d", sususrid)
 
+        t1 = time.time()
 
         sus_t = sus.getDAL(self._metadata).t
 
@@ -104,6 +105,9 @@ class InsDAL(wedge.model.schema.BaseDAL):
             sus_t.c.susact == 1,
         ))
         result = self.queryEntities(con, stmt)
+
+        log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
+        
         for r in result:
             setattr(r, "engine", sqlalchemy.create_engine(r.insurl))
             delattr(r, "insurl")

@@ -1,0 +1,16 @@
+WEDGE FRAMEWORK - 
+
+Estructura de capas y niveles de acceso
+
++-------------+-------------+-------+--------+----+--------+
+| Cliente Web | Service BUS | Otros |        |    |        |
++----------------+------------------+        |    |        |
+| Servicios REST | Servicios GRPC   | Junior |    |        |
++----------+-----+------------------+        |    |        |
+| API, acciones disponibles         |        |    |        |
++-----------------------------------+--------+    |        |
+| BL, lógica de negocio             |      Senior |        |
++-----------------------------------+-------------+        |
+| DAL, capa de acceso a datos       |         Arquitecto   |
++-----------------------------------+----------------------+
+
