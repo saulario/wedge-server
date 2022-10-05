@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import logging, logging.handlers
+import os.path
 import sys
 
 import wedge.bl.ctl.usr
@@ -17,7 +18,7 @@ if __name__ == "__main__":
         sys.stderr.write("Error obteniendo contexto...")
         sys.exit(1)
 
-    file = (__file__.split("/")[-1]).split(".")[0]
+    file = os.path.basename(__file__).split(".")[0]
     handler = logging.handlers.RotatingFileHandler(
             filename=f"{wedge.core.engine.WEDGE_HOME}/log/{file}.log",
             maxBytes=1024*1024*10, backupCount=5)
