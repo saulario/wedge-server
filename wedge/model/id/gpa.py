@@ -3,10 +3,11 @@ import logging
 import threading
 import time
 
-from types import Union
+from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
+from sqlalchemy.schema import Column
 
 import wedge.model.schema
 
@@ -21,55 +22,60 @@ def getDAL(metadata):
     global _dal
     if _dal is not None: return _dal
     with threading.Lock():
-        _dal = LangDAL(metadata)
+        _dal = GpaDAL(metadata)
         return _dal
 
 
-class Lang(wedge.model.schema.Entity):
+class Gpa(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.code:str = None
+        self.gpacod:str = None
 
 
-class LangDAL(wedge.model.schema.BaseDAL):
+class GpaDAL(wedge.model.schema.BaseDAL):
 
-    def __init__(self, metadata, nombre = "Lang"):
-        super().__init__(metadata, nombre, type=Lang)
+    def __init__(self, metadata, nombre = "gpa"):
+        super().__init__(metadata, nombre, type=Gpa)
 
-    def delete(self, conn:Connection, code:str) -> int:
+    def delete(self, conn:Connection, gpacod:int) -> int:
         """
         Borrado por PK
         """
         t1 = time.time()
         t = self._t
         stmt = t.delete(None).where(and_(
-                t.c.code == code,
+                t.c.gpacod == gpacod,
         ))
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+    
+    def insert(self, conn:Connection, entity:Gpa) -> Gpa:
+        result = super().insert(conn, entity)
+        entity.gpacod = result[0]
+        return entity
 
-    def read(self, conn:Connection, code:str, projection=None) -> Union[Lang,None]:
+    def read(self, conn:Connection, gpacod:str, projection:Union[List[Column], None]=None) -> Union[Gpa,None]:
         """
         Lectura por PK
         """
         t1 = time.time()
         t = self._t
         stmt = self.select(projection).where(and_(
-                t.c.code == code,
+                t.c.gpacod == gpacod,
         ))
         retval = self._execute_read(conn, stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Lang) -> int:
+    def update(self, conn:Connection, entity:Gpa) -> int:
         """
         Actualización por PK
         """
         t1 = time.time()
         t = self._t
         stmt = t.update(None).values(entity.__dict__).where(and_(
-                t.c.code == entity.code,
+                t.c.gpacod == entity.gpacod,
         ))
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
