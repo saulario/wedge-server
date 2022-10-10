@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import sqlalchemy
+import sqlalchemy.schema
 
 import wedge.core.engine as engine
 
@@ -17,7 +17,9 @@ def transaction(func):
 
 
 class BaseAction():
-
-    def __init__(self, *args, **kwargs):
-        self.context:engine.Context = None
-        self.connection:sqlalchemy.engine.Connection = None
+    """
+    Implementación común para todos los actions del API
+    """
+    
+    def __init__(self, metadata:sqlalchemy.schema.MetaData):
+        self._metadata = metadata

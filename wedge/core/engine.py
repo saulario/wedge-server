@@ -21,7 +21,12 @@ WEDGE_HOME      = f"{os.getenv('WEDGE_HOME', os.path.expanduser('~'))}/wedge/{WE
 
 
 ###############################################################################
-#
+# El contexto se guarda como variable de módulo para ofrecer un pool de
+# conexiones. Esto permite también evitar el pasar el contexto en todas las 
+# llamadas a todas las funciones puesto que la información es accesible en
+# todo momento
+
+current_context = None
 
 class Context():
     """
@@ -36,9 +41,12 @@ class Context():
 def create_context(file:str = None) -> Union[Context, None]:
     """
     Crea un contexto a partir del fichero pasado como parámetro o del archivo por defecto
+    y lo deja instanciado en current_context.
         :param file:    Nombre del fichero de configuración
         :return:        Context o None si no existe el fichero
     """
+    global current_context
+
     ctx = None
     f = file or f"{WEDGE_HOME}/etc/config.ini"
     cp = configparser.ConfigParser()
@@ -47,8 +55,8 @@ def create_context(file:str = None) -> Union[Context, None]:
 
     ctx = Context()
 
-    engine = sqlalchemy.create_engine(cp.get("CTL", "url"))
-    metadata = sqlalchemy.MetaData(bind=ctx.engine)
+    engine = sqlalchemy.create_engine(cp.get("CTL", "url"), isolation_level = "READ COMMITTED")
+    metadata = sqlalchemy.MetaData(bind=engine)
     ctx.dbpool[0] = (engine, metadata)
 
     insDAL = wedge.model.ctl.ins.getDAL(metadata)
@@ -57,10 +65,11 @@ def create_context(file:str = None) -> Union[Context, None]:
     with engine.connect() as con:
         result = insDAL.query(con, stmt)
         for r in result:
-            e = sqlalchemy.engine.create_engine(r.insurl)
+            e = sqlalchemy.engine.create_engine(r.insurl, isolation_level = "READ COMMITTED")
             m = sqlalchemy.schema.MetaData(bind=engine)
             ctx.dbpool[r.insid] = (e, m)
 
+    current_context = ctx
     return ctx
 
 class Session():

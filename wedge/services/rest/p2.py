@@ -13,13 +13,9 @@ app = flask.Flask(__name__)
 @app.before_first_request
 def setup():
     """
-    Inicialización de contexto y conexiones a bases de datos
+    Inicialización de contexto y del pool de bases de ddatos
     """
-    flask.current_app.wc_context = wedge.core.engine.create_context()
-
-
-
-
+    wedge.core.engine.create_context()
 
 
 @app.route("/")

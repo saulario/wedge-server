@@ -6,9 +6,11 @@ import threading
 from typing import Union
 
 import sqlalchemy.engine
+import sqlalchemy.schema
 
 from sqlalchemy import and_
 
+import wedge.bl.commons
 import wedge.core.engine as engine
 import wedge.model.ctl.ins as ctl_ins
 import wedge.model.ctl.ses as ctl_ses
@@ -21,21 +23,9 @@ log = logging.getLogger(__name__)
 SESSION_LIFETIME = 3600         # Tiempo de vida de una sesión antes de expirar
 
 
-# singleton
-_bl = None
+class UsrBL(wedge.bl.commons.BaseBL):
 
-def getBL():
-    global _bl
-    if _bl is not None: return _bl
-    with threading.Lock():
-        _bl = UsrBL()
-        return _bl
-
-
-class UsrBL():
-
-    def CheckSession(self, con:sqlalchemy.engine.Connection, token:str,
-            context:engine.Context) -> Union[engine.Session, None]:
+    def CheckSession(self, con:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
         """
         Recupera una sesión si el token es válido. Si algo falla devuelve la sesión a nulo
         sin dar mayor explicación. Se realizan las siguientes tareas.
@@ -53,7 +43,7 @@ class UsrBL():
             log.info("<----- Salida, no hay datos")
             return None
 
-        sesDAL = ctl_ses.getDAL(context.metadata)
+        sesDAL = ctl_ses.getDAL(self._metadata)
 
         flimit = dt.datetime.utcnow() - dt.timedelta(seconds=SESSION_LIFETIME)
         sesDAL.invalidarSesionesCaducadas(con, flimit)
@@ -66,15 +56,14 @@ class UsrBL():
         ses.sesful = dt.datetime.utcnow()
         sesDAL.update(con, ses)
 
-        usr = ctl_usr.getDAL(context.metadata).read(con, ses.sesusrid)
-        insList = ctl_ins.getDAL(context.metadata).suscripciones(con, usr.usrid)
+        usr = ctl_usr.getDAL(self._metadata).read(con, ses.sesusrid)
+        insList = ctl_ins.getDAL(self._metadata).suscripciones(con, usr.usrid)
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
         log.info("<----- Fin")
         return retval
 
-    def Login(self, con:sqlalchemy.engine.Connection, username:str, password:str, 
-            context:engine.Context) -> Union[engine.Session, None]:
+    def Login(self, con:sqlalchemy.engine.Connection, username:str, password:str) -> Union[engine.Session, None]:
         """
         Abre una sesión si autentica el usuario. Si algo falla devuelve la sesión a nulo
         sin dar mayor explicación. Se realizan las siguientes tareas
@@ -97,15 +86,15 @@ class UsrBL():
             log.info("<----- Salida, no hay datos")
             return None
 
-        usr = ctl_usr.getDAL(context.metadata).autenticar(con, username, password)
+        usr = ctl_usr.getDAL(self._metadata).autenticar(con, username, password)
         if not usr:
             log.info("<----- Salida, no encontrado el usuario")
             return None
 
-        sesDAL = ctl_ses.getDAL(context.metadata)
+        sesDAL = ctl_ses.getDAL(self._metadata)
         sesDAL.invalidarSesionesUsuario(con, usr.usrid)
 
-        insDAL = ctl_ins.getDAL(context.metadata)
+        insDAL = ctl_ins.getDAL(self._metadata)
         insList = insDAL.suscripciones(con, usr.usrid)
 
         ses = sesDAL.getEntity()
@@ -119,3 +108,17 @@ class UsrBL():
 
         log.info("<----- Fin")
         return retval
+
+
+
+###############################################################################
+# singleton
+
+_bl = None
+
+def getBL(metadata:sqlalchemy.schema.MetaData) -> UsrBL:
+    global _bl
+    if _bl is not None: return _bl
+    with threading.Lock():
+        _bl = UsrBL(metadata)
+        return _bl
