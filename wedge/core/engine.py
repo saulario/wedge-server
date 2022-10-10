@@ -3,12 +3,13 @@ import configparser
 import logging
 import os, os.path
 
-from typing import List, Union
+from typing import Dict, List, Tuple, Union
 
 import sqlalchemy
 import sqlalchemy.engine
 
 import wedge.model.ctl
+import wedge.model.ctl.ins
 
 log = logging.getLogger(__name__)
 
@@ -25,12 +26,12 @@ WEDGE_HOME      = f"{os.getenv('WEDGE_HOME', os.path.expanduser('~'))}/wedge/{WE
 class Context():
     """
     Contexto de ejecución de la aplicación.
+        * dbpool,   pool de conexiones a base e datos. El id=0 se corresponde
+                    con la base de datos de control. El resto de ids se
+                    corresponden con las instancias
     """
-
     def __init__(self, **kwargs):
-        self.engine:sqlalchemy.engine.Engine = None
-        self.metadata:sqlalchemy.MetaData = None
-
+        self.dbpool:Dict[int, Tuple[sqlalchemy.engine.Engine, sqlalchemy.schema.MetaData]] = {}
 
 def create_context(file:str = None) -> Union[Context, None]:
     """
@@ -45,11 +46,22 @@ def create_context(file:str = None) -> Union[Context, None]:
         return ctx
 
     ctx = Context()
-    ctx.engine = sqlalchemy.create_engine(cp.get("CTL", "url"))
-    ctx.metadata = sqlalchemy.MetaData(bind=ctx.engine)
+
+    engine = sqlalchemy.create_engine(cp.get("CTL", "url"))
+    metadata = sqlalchemy.MetaData(bind=ctx.engine)
+    ctx.dbpool[0] = (engine, metadata)
+
+    insDAL = wedge.model.ctl.ins.getDAL(metadata)
+    stmt = insDAL.select(list(insDAL.t.c))
+    
+    with engine.connect() as con:
+        result = insDAL.query(con, stmt)
+        for r in result:
+            e = sqlalchemy.engine.create_engine(r.insurl)
+            m = sqlalchemy.schema.MetaData(bind=engine)
+            ctx.dbpool[r.insid] = (e, m)
 
     return ctx
-
 
 class Session():
     """

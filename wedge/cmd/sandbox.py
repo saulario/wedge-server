@@ -5,10 +5,12 @@ import os.path
 import sys
 
 import pytz
+import sqlalchemy.engine
 
-import wedge.bl.ctl.usr
+import wedge.bl.ctl.usr as bl_usr
 import wedge.core.engine
-import wedge.model.ctl.usr
+import wedge.model.ctl.usr as model_usr
+import wedge.model.id.gpa as model_gpa
 
 log = logging.getLogger(__name__)
 
@@ -42,11 +44,17 @@ if __name__ == "__main__":
     log.info("-----> Inicio")
 
     conn = ctx.engine.connect()
-    usrBL = wedge.bl.ctl.usr.getBL()
+    usrBL = bl_usr.getBL()
 
     session = usrBL.Login(conn, "saulario", "123456", ctx)
-
     s1 = usrBL.CheckSession(conn, session.ses.sescod, ctx)
+
+    eng = [ x.engine for x in s1.insList if x.insid == s1.ses.sesinsid ]
+    eng:sqlalchemy.engine.Engine = eng[0] if eng else None
+
+    with eng.connect() as c1:
+        model_gpa.getDAL(None)
+    
 
     conn.close()
 

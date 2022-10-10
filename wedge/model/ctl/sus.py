@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import datetime as dt
 import logging
 import threading
 import time
@@ -30,7 +31,11 @@ def getDAL(metadata):
 class Sus(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.susid:int = None
+        self.susid:int          = None
+        self.sususrid:int       = None
+        self.susinsid:int       = None
+        self.susfcr:dt.datetime = None
+        self.susact:int         = None
 
 
 class SusDAL(wedge.model.schema.BaseDAL):

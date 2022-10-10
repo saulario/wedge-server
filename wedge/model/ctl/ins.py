@@ -32,7 +32,10 @@ def getDAL(metadata):
 class Ins(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.insid:int = None
+        self.insid:int      = None
+        self.insnom:str     = None
+        self.inscliid:int   = None
+        self.insurl:str     = None
 
 
 class InsDAL(wedge.model.schema.BaseDAL):

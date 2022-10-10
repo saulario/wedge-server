@@ -12,7 +12,7 @@ app = flask.Flask(__name__)
 api = flask_restful.Api(app)
 
 
-class UsrLogin(flask_restful.Resource):
+class UsrLoginXX(flask_restful.Resource):
 
     def post(self):
 
@@ -25,13 +25,49 @@ class UsrLogin(flask_restful.Resource):
                 ensure_ascii=False)
 
 
-class UsrCheckSession(flask_restful.Resource):
+class UsrCheckSessionXX(flask_restful.Resource):
 
     def post(self):
         return None
 
+class BaseResource(flask_restful.Resource):
+
+    def get(self):
+        return self.dispatch()
+
+    def post(self):
+        return self.dispatch()
+
+    def dispatch(self):
+        return None
+
+    def nullEndpoint(self):
+        return None
+
+class UsrResource(BaseResource):
+
+    def dispatch(self):
+        getattr(self, flask.request.endpoint, self.nullEndpoint)()
+
+    def usrlogin(self):
+        pass
+
+    def usrconnect(self):
+        pass
+        
+class UsrLogin(UsrResource):
+    pass
+
+class UsrConnect(UsrResource):
+    pass
+
 api.add_resource(UsrLogin, "/usr/login")
-api.add_resource(UsrCheckSession, "/usr/checkSession")
+api.add_resource(UsrConnect, "/usr/connect")
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

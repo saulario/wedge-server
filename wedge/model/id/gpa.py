@@ -37,7 +37,7 @@ class GpaDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "gpa"):
         super().__init__(metadata, nombre, type=Gpa)
 
-    def delete(self, conn:Connection, gpacod:int) -> int:
+    def delete(self, conn:Connection, gpacod:str) -> int:
         """
         Borrado por PK
         """

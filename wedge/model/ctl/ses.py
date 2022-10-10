@@ -32,7 +32,12 @@ def getDAL(metadata):
 class Ses(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.sescod:str = None
+        self.sescod:str         = None
+        self.sesusrid:int       = None
+        self.sesinsid:int       = None
+        self.sesfcr:dt.datetime = None
+        self.sesful:dt.datetime = None
+        self.sesact:int         = None
 
 
 class SesDAL(wedge.model.schema.BaseDAL):

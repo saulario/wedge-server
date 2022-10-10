@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import datetime as dt
 import hashlib
 import logging
 import threading
@@ -30,7 +31,13 @@ def getDAL(metadata):
 class Usr(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.usrid:int = None
+        self.usrid:int          = None
+        self.usrcod:str         = None
+        self.usrnom:str         = None
+        self.usrpwd:str         = None
+        self.usrfcr:dt.datetime = None
+        self.usri18:str         = None
+        self.usract:int         = None
 
 
 class UsrDAL(wedge.model.schema.BaseDAL):

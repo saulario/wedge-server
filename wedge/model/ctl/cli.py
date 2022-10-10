@@ -29,7 +29,8 @@ def getDAL(metadata):
 class Cli(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.cliid:int = None
+        self.cliid:int      = None
+        self.clinom:str     = None
 
 
 class CliDAL(wedge.model.schema.BaseDAL):
