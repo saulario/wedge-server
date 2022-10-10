@@ -66,7 +66,7 @@ def create_context(file:str = None) -> Union[Context, None]:
         result = insDAL.query(con, stmt)
         for r in result:
             e = sqlalchemy.engine.create_engine(r.insurl, isolation_level = "READ COMMITTED")
-            m = sqlalchemy.schema.MetaData(bind=engine)
+            m = sqlalchemy.schema.MetaData(bind=e)
             ctx.dbpool[r.insid] = (e, m)
 
     current_context = ctx

@@ -1,11 +1,37 @@
 #!/usr/bin/python3
+import json
+import logging
+import threading
+
+from typing import Union
+
+import sqlalchemy.engine
+import sqlalchemy.schema
 
 import wedge.api.commons as commons
-import wedge.model.id as id
+import wedge.bl.id.gpa as bl_gpa
+import wedge.core.engine as engine
+import wedge.model.id
+
+
+log = logging.getLogger(__name__)
+
 
 class GpaAction(commons.BaseAction):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def Read(self, conn:sqlalchemy.engine.Connection, gpacod:str, session:engine.Session) -> Union[wedge.model.id.Gpa, None]:
+        retval = bl_gpa.getBL(self._metadata).Read(conn, gpacod, session)
+        return json.dumps(retval, default=lambda d: d.__dict__ if hasattr(d, "__dict__") else d, ensure_ascii=False)
 
-    def Read(gpacod:str) -> id.Gpa:
+
+###############################################################################
+# singleton
+
+_action = None
+
+def getAction(metadata:sqlalchemy.schema.MetaData) -> GpaAction:
+    global _action
+    if _action is not None: return _action
+    with threading.Lock():
+        _action = GpaAction(metadata)
+        return _action
