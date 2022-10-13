@@ -9,23 +9,12 @@ from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column
+from sqlalchemy.schema import Column, MetaData
 
 import wedge.model.schema
 
+
 log = logging.getLogger(__name__)
-
-
-# singleton
-_dal = None
-
-
-def getDAL(metadata):
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = UsrDAL(metadata)
-        return _dal
 
 
 class Usr(wedge.model.schema.Entity):
@@ -45,7 +34,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "usr"):
         super().__init__(metadata, nombre, type=Usr)
 
-    def autenticar(self, conn:Connection, username:str, password:str) -> Union[Usr, None]:
+    def Autenticar(self, conn:Connection, username:str, password:str) -> Union[Usr, None]:
         """
         Autentica un usuario.
             :param  conn:       Conexión a base de datos de control
@@ -79,7 +68,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         log.debug("<----- Fin")
         return retval
 
-    def delete(self, conn:Connection, usrid:int) -> int:
+    def Delete(self, conn:Connection, usrid:int) -> int:
         """
         Borrado por PK
         """
@@ -92,13 +81,13 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
     
-    def insert(self, conn:Connection, entity:Usr) -> Usr:
+    def Insert(self, conn:Connection, entity:Usr) -> Usr:
         delattr(entity, "usrid")
         result = super().insert(conn, entity)
         entity.usrid = result[0]
         return entity
 
-    def read(self, conn:Connection, usrid:int, projection:Union[List[Column], None]=None) -> Union[Usr,None]:
+    def Read(self, conn:Connection, usrid:int, projection:Union[List[Column], None]=None) -> Union[Usr,None]:
         """
         Lectura por PK
         """
@@ -111,7 +100,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Usr) -> int:
+    def Update(self, conn:Connection, entity:Usr) -> int:
         """
         Actualización por PK
         """
@@ -123,3 +112,16 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+
+
+###############################################################################
+# singleton
+
+_dal = None
+
+def getDAL(metadata:MetaData) -> UsrDAL:
+    global _dal
+    if _dal is not None: return _dal
+    with threading.Lock():
+        _dal = UsrDAL(metadata)
+        return _dal        

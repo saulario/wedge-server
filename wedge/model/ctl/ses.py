@@ -10,23 +10,12 @@ from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column
+from sqlalchemy.schema import Column, MetaData
 
 import wedge.model.schema
 
+
 log = logging.getLogger(__name__)
-
-
-# singleton
-_dal = None
-
-
-def getDAL(metadata):
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = SesDAL(metadata)
-        return _dal
 
 
 class Ses(wedge.model.schema.Entity):
@@ -45,7 +34,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "ses"):
         super().__init__(metadata, nombre, type=Ses)
 
-    def delete(self, con:Connection, sescod:str) -> int:
+    def Delete(self, con:Connection, sescod:str) -> int:
         """
         Borrado por PK
         """
@@ -58,7 +47,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
     
-    def insert(self, con:Connection, entity:Ses) -> Ses:
+    def Insert(self, con:Connection, entity:Ses) -> Ses:
         """
         Inserción generando una PK forzada
         """
@@ -67,7 +56,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         entity.sescod = result[0]
         return entity
 
-    def invalidarSesionesCaducadas(self, con:Connection, flimit:dt.datetime) -> int:
+    def InvalidarSesionesCaducadas(self, con:Connection, flimit:dt.datetime) -> int:
         """
         Invalida todas las sesiones que pudiera tener abiertas el usuario antes de asignar
         un nuevo objeto sesión.
@@ -93,7 +82,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         log.debug("<----- Fin")
         return result.rowcount        
 
-    def invalidarSesionesUsuario(self, con:Connection, usrid:int) -> int:
+    def InvalidarSesionesUsuario(self, con:Connection, usrid:int) -> int:
         """
         Invalida todas las sesiones que pudiera tener abiertas el usuario antes de asignar
         un nuevo objeto sesión.
@@ -119,7 +108,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         log.debug("<----- Fin")
         return result.rowcount
 
-    def read(self, con:Connection, sescod:str, projection:Union[List[Column], None]=None) -> Union[Ses,None]:
+    def Read(self, con:Connection, sescod:str, projection:Union[List[Column], None]=None) -> Union[Ses,None]:
         """
         Lectura por PK
         """
@@ -132,7 +121,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Ses) -> int:
+    def Update(self, conn:Connection, entity:Ses) -> int:
         """
         Actualización por PK
         """
@@ -144,3 +133,17 @@ class SesDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+
+
+###############################################################################
+# singleton
+
+_dal = None
+
+
+def getDAL(metadata:MetaData) -> SesDAL:
+    global _dal
+    if _dal is not None: return _dal
+    with threading.Lock():
+        _dal = SesDAL(metadata)
+        return _dal

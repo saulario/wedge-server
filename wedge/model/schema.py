@@ -5,8 +5,9 @@ import time
 from typing import Any
 
 from sqlalchemy import MetaData, Table
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection, LegacyRow
 from sqlalchemy.sql import expression
+from sqlalchemy.sql.schema import Table
 
 
 log = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ class Entity():
     """
 
     @staticmethod
-    def fromProxy(proxy, type):
+    def fromProxy(proxy:LegacyRow, type_t:Any) -> Any:
         """
         Construye una entidad a partir de un proxy
         param:      proxy: ResultProxy
@@ -31,14 +32,14 @@ class Entity():
         """
         if proxy is None:
             return
-        e = type()
-        for key in proxy.iterkeys():
+        e = type_t()
+        for key in proxy._mapping.keys():
             setattr(e, key, proxy[key])
         return e
 
 
     @staticmethod
-    def fromTable(table):
+    def fromTable(table:Table) -> Any:
         """
         Construye una entidad a partir de los metadatos de una tabla
         param:      table: Tabla
@@ -69,14 +70,7 @@ class BaseDAL():
         self._t = Table(nombre, metadata, autoload = True)
         self._type = type
 
-    def comprobarValores(self, entity:Entity):
-        """
-        Para poder implementar en subclases el método de comprobación de valores sin
-        tener que rehacer el insert
-        """
-        return entity
-
-    def insert(self, conn:Connection, entity:Entity):
+    def Insert(self, conn:Connection, entity:Entity):
         """
         Inserta una fila en base de datos. No recupera las claves generadas, en caso
         necesario hay que especializar el método. En este caso devuelve la entidad
@@ -91,7 +85,7 @@ class BaseDAL():
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.inserted_primary_key
 
-    def queryEntities(self, conn:Connection, stmt):
+    def QueryEntities(self, conn:Connection, stmt):
         """
         Devuelve un array de entidades recuperadas en una consulta
             :param  conn:       conexión a base de datos
@@ -109,7 +103,7 @@ class BaseDAL():
             log.warning(f"\t(SLOWQUERY)\t(tt): {round(tt,3)}\t(rows): {len(retval)}\t(stmt): {stmt}")
         return retval
 
-    def query(self, conn:Connection, stmt):
+    def Query(self, conn:Connection, stmt):
         """
         Devuelve una consulta como un resultProxy
             :param  conn:   conexi├│n a base de datos (`:class:sqlalchemy.engine.Connection`)
@@ -128,7 +122,7 @@ class BaseDAL():
         """
         return Entity.fromProxy(conn.execute(stmt).fetchone(), self._type)
 
-    def select(self, projection=None):
+    def Select(self, projection=None):
         """
         Devuelve una instrucción select para la tabla. Se puede especificar la proyección.
         Si no se especifica da un aviso en el log

@@ -9,24 +9,12 @@ import sqlalchemy
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column
+from sqlalchemy.schema import Column, MetaData
 
 import wedge.model.ctl.sus as sus
 import wedge.model.schema
 
 log = logging.getLogger(__name__)
-
-
-# singleton
-_dal = None
-
-
-def getDAL(metadata):
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = InsDAL(metadata)
-        return _dal
 
 
 class Ins(wedge.model.schema.Entity):
@@ -43,7 +31,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "ins"):
         super().__init__(metadata, nombre, type=Ins)
 
-    def delete(self, conn:Connection, insid:int) -> int:
+    def Delete(self, conn:Connection, insid:int) -> int:
         """
         Borrado por PK
         """
@@ -56,13 +44,13 @@ class InsDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
     
-    def insert(self, conn:Connection, entity:Ins) -> Ins:
+    def Insert(self, conn:Connection, entity:Ins) -> Ins:
         delattr(entity, "insid")
         result = super().insert(conn, entity)
         entity.insid = result[0]
         return entity
 
-    def read(self, conn:Connection, insid:int, projection:Union[List[Column], None]=None) -> Union[Ins,None]:
+    def Read(self, conn:Connection, insid:int, projection:Union[List[Column], None]=None) -> Union[Ins,None]:
         """
         Lectura por PK
         """
@@ -75,7 +63,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Ins) -> int:
+    def Update(self, conn:Connection, entity:Ins) -> int:
         """
         Actualización por PK
         """
@@ -88,7 +76,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
 
-    def suscripciones(self, con:Connection, sususrid:int) -> List[Ins]:
+    def Suscripciones(self, con:Connection, sususrid:int) -> List[Ins]:
         """
         Devuelve las suscripciones a instancias activas asociadas a un usuario. Sustituye la URL por
         una instancia de engine de la base de datos.
@@ -117,3 +105,16 @@ class InsDAL(wedge.model.schema.BaseDAL):
 
         log.debug("<----- Fin")
         return result
+
+
+###############################################################################
+# singleton
+
+_dal = None
+
+def getDAL(metadata:MetaData) -> InsDAL:
+    global _dal
+    if _dal is not None: return _dal
+    with threading.Lock():
+        _dal = InsDAL(metadata)
+        return _dal

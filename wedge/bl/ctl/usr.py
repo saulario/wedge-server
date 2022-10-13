@@ -46,18 +46,18 @@ class UsrBL(wedge.bl.commons.BaseBL):
         sesDAL = model_ses.getDAL(self._metadata)
 
         flimit = dt.datetime.utcnow() - dt.timedelta(seconds=SESSION_LIFETIME)
-        sesDAL.invalidarSesionesCaducadas(con, flimit)
-        ses = sesDAL.read(con, token, list(sesDAL.t.c))
+        sesDAL.InvalidarSesionesCaducadas(con, flimit)
+        ses = sesDAL.Read(con, token, list(sesDAL.t.c))
 
         if not ses or not ses.sesact:
             log.info("<----- Salida, no hay sesión válida")
             return None
 
         ses.sesful = dt.datetime.utcnow()
-        sesDAL.update(con, ses)
+        sesDAL.Update(con, ses)
 
-        usr = model_usr.getDAL(self._metadata).read(con, ses.sesusrid)
-        insList = model_ins.getDAL(self._metadata).suscripciones(con, usr.usrid)
+        usr = model_usr.getDAL(self._metadata).Read(con, ses.sesusrid)
+        insList = model_ins.getDAL(self._metadata).Suscripciones(con, usr.usrid)
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
         log.info("<----- Fin")
@@ -86,23 +86,23 @@ class UsrBL(wedge.bl.commons.BaseBL):
             log.info("<----- Salida, no hay datos")
             return None
 
-        usr = model_usr.getDAL(self._metadata).autenticar(con, username, password)
+        usr = model_usr.getDAL(self._metadata).Autenticar(con, username, password)
         if not usr:
             log.info("<----- Salida, no encontrado el usuario")
             return None
 
         sesDAL = model_ses.getDAL(self._metadata)
-        sesDAL.invalidarSesionesUsuario(con, usr.usrid)
+        sesDAL.InvalidarSesionesUsuario(con, usr.usrid)
 
         insDAL = model_ins.getDAL(self._metadata)
-        insList = insDAL.suscripciones(con, usr.usrid)
+        insList = insDAL.Suscripciones(con, usr.usrid)
 
         ses = sesDAL.getEntity()
         ses.sesusrid = usr.usrid
         ses.sesinsid = insList[0].insid if len(insList) == 1 else None
         ses.sesfcr = ses.sesful = dt.datetime.utcnow()
         ses.sesact = 1
-        ses = sesDAL.insert(con, ses)
+        ses = sesDAL.Insert(con, ses)
 
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
@@ -110,17 +110,17 @@ class UsrBL(wedge.bl.commons.BaseBL):
         return retval
 
     def Delete(self, con:sqlalchemy.engine.Connection, usrid:int, session:engine.Session) -> int:
-        return model_usr.getDAL(self._metadata).delete(con, usrid)
+        return model_usr.getDAL(self._metadata).Delete(con, usrid)
 
     def Insert(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr, session:engine.Session) -> model_usr.Usr:
-        return model_usr.getDAL(self._metadata).insert(con, usr)
+        return model_usr.getDAL(self._metadata).Insert(con, usr)
 
     def Read(self, con:sqlalchemy.engine.Connection, usrid:int, session:engine.Session) -> Union[model_usr.Usr, None]:
         usrDAL = model_usr.getDAL(self._metadata)
-        return usrDAL.read(con, usrid, list(usrDAL.t.c))
+        return usrDAL.Read(con, usrid, list(usrDAL.t.c))
 
     def Update(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr, session:engine.Session) -> int:
-        return model_usr.getDAL(self._metadata).update(con, usr)
+        return model_usr.getDAL(self._metadata).Update(con, usr)
 
 
 ###############################################################################

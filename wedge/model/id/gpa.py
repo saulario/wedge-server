@@ -7,7 +7,7 @@ from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column
+from sqlalchemy.schema import Column, MetaData
 
 import wedge.model.schema
 
@@ -27,7 +27,7 @@ class GpaDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "gpa"):
         super().__init__(metadata, nombre, type=Gpa)
 
-    def delete(self, conn:Connection, gpacod:str) -> int:
+    def Delete(self, conn:Connection, gpacod:str) -> int:
         """
         Borrado por PK
         """
@@ -40,12 +40,12 @@ class GpaDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
     
-    def insert(self, conn:Connection, entity:Gpa) -> Gpa:
+    def Insert(self, conn:Connection, entity:Gpa) -> Gpa:
         result = super().insert(conn, entity)
         entity.gpacod = result[0]
         return entity
 
-    def read(self, conn:Connection, gpacod:str, projection:Union[List[Column], None]=None) -> Union[Gpa,None]:
+    def Read(self, conn:Connection, gpacod:str, projection:Union[List[Column], None]=None) -> Union[Gpa,None]:
         """
         Lectura por PK
         """
@@ -58,7 +58,7 @@ class GpaDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Gpa) -> int:
+    def Update(self, conn:Connection, entity:Gpa) -> int:
         """
         Actualización por PK
         """
@@ -77,7 +77,7 @@ class GpaDAL(wedge.model.schema.BaseDAL):
 
 _dal = None
 
-def getDAL(metadata) -> GpaDAL:
+def getDAL(metadata:MetaData) -> GpaDAL:
     global _dal
     if _dal is not None: return _dal
     with threading.Lock():

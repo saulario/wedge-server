@@ -7,29 +7,19 @@ from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column
+from sqlalchemy.schema import Column, MetaData
 
 import wedge.model.schema
 
+
 log = logging.getLogger(__name__)
-
-
-# singleton
-_dal = None
-
-
-def getDAL(metadata):
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = GtzDAL(metadata)
-        return _dal
 
 
 class Gtz(wedge.model.schema.Entity):
 
     def __init__(self):
-        self.gtzid:int = None
+        self.gtzid:int      = None
+        self.gtznom:str     = None
 
 
 class GtzDAL(wedge.model.schema.BaseDAL):
@@ -37,7 +27,7 @@ class GtzDAL(wedge.model.schema.BaseDAL):
     def __init__(self, metadata, nombre = "gtz"):
         super().__init__(metadata, nombre, type=Gtz)
 
-    def delete(self, conn:Connection, gtzid:int) -> int:
+    def Delete(self, conn:Connection, gtzid:int) -> int:
         """
         Borrado por PK
         """
@@ -50,13 +40,13 @@ class GtzDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
     
-    def insert(self, conn:Connection, entity:Gtz) -> Gtz:
+    def Insert(self, conn:Connection, entity:Gtz) -> Gtz:
         delattr(entity, "gtzid")
         result = super().insert(conn, entity)
         entity.gtzid = result[0]
         return entity
 
-    def read(self, conn:Connection, gtzid:int, projection:Union[List[Column], None]=None) -> Union[Gtz,None]:
+    def Read(self, conn:Connection, gtzid:int, projection:Union[List[Column], None]=None) -> Union[Gtz,None]:
         """
         Lectura por PK
         """
@@ -69,7 +59,7 @@ class GtzDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return retval
 
-    def update(self, conn:Connection, entity:Gtz) -> int:
+    def Update(self, conn:Connection, entity:Gtz) -> int:
         """
         Actualización por PK
         """
@@ -81,3 +71,16 @@ class GtzDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
+
+
+###############################################################################
+# singleton
+
+_dal = None
+
+def getDAL(metadata:MetaData) -> GtzDAL:
+    global _dal
+    if _dal is not None: return _dal
+    with threading.Lock():
+        _dal = GtzDAL(metadata)
+        return _dal        

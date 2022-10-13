@@ -17,11 +17,11 @@ log = logging.getLogger(__name__)
 
 class UsrAction(commons.BaseAction):
 
+    def CheckSession(self, conn:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
+        return bl_usr.getBL(self._metadata).CheckSession(conn, token)    
+
     def Login(self, conn:sqlalchemy.engine.Connection, username:str, password:str) -> Union[engine.Session, None]:
         return bl_usr.getBL(self._metadata).Login(conn, username, password)
-
-    def CheckSession(self, conn:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
-        return bl_usr.getBL(self._metadata).CheckSession(conn, token)
 
 
 ###############################################################################
