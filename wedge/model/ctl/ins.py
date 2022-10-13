@@ -46,7 +46,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
     
     def Insert(self, conn:Connection, entity:Ins) -> Ins:
         delattr(entity, "insid")
-        result = super().insert(conn, entity)
+        result = super().Insert(conn, entity)
         entity.insid = result[0]
         return entity
 
@@ -56,7 +56,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
-        stmt = self.select(projection).where(and_(
+        stmt = self.Select(projection).where(and_(
                 t.c.insid == insid,
         ))
         retval = self._execute_read(conn, stmt)
@@ -95,7 +95,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
             sus_t.c.sususrid == sususrid,
             sus_t.c.susact == 1,
         ))
-        result = self.queryEntities(con, stmt)
+        result = self.QueryEntities(con, stmt)
 
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         

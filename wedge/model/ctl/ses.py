@@ -52,7 +52,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         Inserción generando una PK forzada
         """
         entity.sescod = uuid.uuid4().hex + "{:08x}".format(random.randrange(0, 4294967295)) 
-        result = super().insert(con, entity)
+        result = super().Insert(con, entity)
         entity.sescod = result[0]
         return entity
 
@@ -114,7 +114,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
-        stmt = self.select(projection).where(and_(
+        stmt = self.Select(projection).where(and_(
                 t.c.sescod == sescod,
         ))
         retval = self._execute_read(con, stmt)

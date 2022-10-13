@@ -30,7 +30,7 @@ class TestUsr(unittest.TestCase):
         ses.sesinsid = 2
         ses.sesfcr = ses.sesful = dt.datetime.utcnow()
         ses.sesact = 1
-        ses = sesDAL.insert(self.ctl_con, ses)
+        ses = sesDAL.Insert(self.ctl_con, ses)
 
         action = wedge.api.usr.getAction(self.ctl_md)
         ses1 = action.CheckSession(self.ctl_con, ses.sescod)

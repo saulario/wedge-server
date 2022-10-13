@@ -49,12 +49,12 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         t1 = time.time()
         retval = None
 
-        stmt = self.select().where(and_(
+        stmt = self.Select().where(and_(
                 self.t.c.usrcod == username,
                 self.t.c.usrpwd == hashlib.sha256(password.encode("utf-8")).hexdigest(),
                 self.t.c.usract == 1,
             ))
-        result = self.query(conn, stmt)
+        result = self.Query(conn, stmt)
         
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
 
@@ -83,7 +83,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
     
     def Insert(self, conn:Connection, entity:Usr) -> Usr:
         delattr(entity, "usrid")
-        result = super().insert(conn, entity)
+        result = super().Insert(conn, entity)
         entity.usrid = result[0]
         return entity
 
@@ -93,7 +93,7 @@ class UsrDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
-        stmt = self.select(projection).where(and_(
+        stmt = self.Select(projection).where(and_(
                 t.c.usrid == usrid,
         ))
         retval = self._execute_read(conn, stmt)

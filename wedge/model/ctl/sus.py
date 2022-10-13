@@ -47,7 +47,7 @@ class SusDAL(wedge.model.schema.BaseDAL):
     
     def Insert(self, conn:Connection, entity:Sus) -> Sus:
         delattr(entity, "susid")
-        result = super().insert(conn, entity)
+        result = super().Insert(conn, entity)
         entity.susid = result[0]
         return entity
 
@@ -57,7 +57,7 @@ class SusDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
-        stmt = self.select(projection).where(and_(
+        stmt = self.Select(projection).where(and_(
                 t.c.susid == susid,
         ))
         retval = self._execute_read(conn, stmt)
