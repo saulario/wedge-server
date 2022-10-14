@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import importlib
 
+from typing import Any
+
 import sqlalchemy.schema
 
 import wedge.core.engine as engine
@@ -47,12 +49,12 @@ def validation(func):
 
         validator = getattr(self, f"_{func.__name__}Validator", None)
         if not validator:
-            return None, ValidationError().set(session.usr.usri18, "G00001")
+            return BaseResponse(None, ValidationError().set(session.usr.usri18, "G00001"))
         result = validator(*args, **kwargs)
         if result:
-            return None, result
+            return BaseResponse(None, result)
 
-        return func(*args, **kwargs), None
+        return func(*args, **kwargs)
 
     return wrapper
 
@@ -66,3 +68,18 @@ class BaseAction():
 
     def _defaultValidator(self, *args, **kwargs):
         raise NotImplementedError
+
+class BaseRequest():
+    """
+    Tipo base para los datos de las peticiones
+    """
+    def __init__(self):
+        self.data:Any = None
+
+class BaseResponse():
+    """
+    Tipo base para las respuestas de las peticiones
+    """
+    def __init__(self, data:Any, verr:ValidationError):
+        self.data:Any = data
+        self.verr:ValidationError = verr

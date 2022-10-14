@@ -14,7 +14,8 @@ class TestGpa(unittest.TestCase):
     def test_gpa_insert(self):
         gpaAction = api_gpa.getAction(self.id_md)
         data = {}
-        data, result = gpaAction.Insert(self.id_con, data, self.session)
+        request = api_gpa.GpaRequest()
+        response = gpaAction.Insert(self.id_con, request, self.session)
         print("hola tonto")
 
 
