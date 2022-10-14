@@ -23,6 +23,22 @@ class GpaAction(commons.BaseAction):
         retval = bl_gpa.getBL(self._metadata).Read(conn, gpacod, session)
         return json.dumps(retval, default=lambda d: d.__dict__ if hasattr(d, "__dict__") else d, ensure_ascii=False)
 
+    def _InsertValidator(self, conn:sqlalchemy.engine.Connection, data, session:engine.Session):
+        print("Estoy dentro del validator")
+        return None, None
+
+    @commons.validation
+    def Insert(self, conn:sqlalchemy.engine.Connection, data, session:engine.Session):
+        return None, None
+
+    def _UpdateValidator(self, conn:sqlalchemy.engine.Connection, data, session:engine.Session):
+        print("Estoy dentro del validator")
+        return None, None
+
+    @commons.validation
+    def Update(self, conn:sqlalchemy.engine.Connection, data, session:engine.Session):
+        pass
+
 
 ###############################################################################
 # singleton

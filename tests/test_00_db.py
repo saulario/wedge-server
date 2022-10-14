@@ -8,7 +8,7 @@ import fixtures
 
 class TestDB(unittest.TestCase):
 
-    def testConnections(self):
+    def test_Connections(self):
         eng = sqlalchemy.engine.create_engine(fixtures.CTL_URL)
         con = eng.connect()
         con.close()

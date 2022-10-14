@@ -7,6 +7,8 @@ TEST_URL = "postgresql+psycopg2://test:test@localhost"
 CTL_URL = f"{TEST_URL}/test_ctl"
 ID_URL = f"{TEST_URL}/test_id0"
 
+USERNAME = "USUARIO"
+PASSWORD = "123456"
 
 def drop_databases():
     """

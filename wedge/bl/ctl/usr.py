@@ -36,11 +36,11 @@ class UsrBL(wedge.bl.commons.BaseBL):
             :param  token:      Identificador de sesión
             :param  context:    Contexto de ejecución
         """
-        log.info("-----> Inicio")
-        log.info("\t(token): %s", token)
+        log.debug("-----> Inicio")
+        log.debug("\t(token): %s", token)
 
         if not token:
-            log.info("<----- Salida, no hay datos")
+            log.debug("<----- Salida, no hay datos")
             return None
 
         sesDAL = model_ses.getDAL(self._metadata)
@@ -50,7 +50,7 @@ class UsrBL(wedge.bl.commons.BaseBL):
         ses = sesDAL.Read(con, token, list(sesDAL.t.c))
 
         if not ses or not ses.sesact:
-            log.info("<----- Salida, no hay sesión válida")
+            log.debug("<----- Salida, no hay sesión válida")
             return None
 
         ses.sesful = dt.datetime.utcnow()
@@ -60,7 +60,7 @@ class UsrBL(wedge.bl.commons.BaseBL):
         insList = model_ins.getDAL(self._metadata).Suscripciones(con, usr.usrid)
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
-        log.info("<----- Fin")
+        log.debug("<----- Fin")
         return retval
 
     def Login(self, con:sqlalchemy.engine.Connection, username:str, password:str) -> Union[engine.Session, None]:
@@ -77,18 +77,18 @@ class UsrBL(wedge.bl.commons.BaseBL):
             :param  context:    Contexto de ejecución
             :return:            Sesión iniciada
         """
-        log.info("-----> Inicio")
-        log.info("\t(username): %s", username)
-        log.info("\t(password): %s", "*" * len(password or ""))
+        log.debug("-----> Inicio")
+        log.debug("\t(username): %s", username)
+        log.debug("\t(password): %s", "*" * len(password or ""))
 
         retval = None
         if not username or not password:
-            log.info("<----- Salida, no hay datos")
+            log.debug("<----- Salida, no hay datos")
             return None
 
         usr = model_usr.getDAL(self._metadata).Autenticar(con, username, password)
         if not usr:
-            log.info("<----- Salida, no encontrado el usuario")
+            log.debug("<----- Salida, no encontrado el usuario")
             return None
 
         sesDAL = model_ses.getDAL(self._metadata)
@@ -106,7 +106,7 @@ class UsrBL(wedge.bl.commons.BaseBL):
 
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
-        log.info("<----- Fin")
+        log.debug("<----- Fin")
         return retval
 
     def Delete(self, con:sqlalchemy.engine.Connection, usrid:int, session:engine.Session) -> int:

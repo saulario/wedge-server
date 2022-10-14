@@ -87,19 +87,3 @@ class Session():
         self.ses:wedge.model.ctl.Ses = kwargs.get("ses", None)
         self.insList:List[wedge.model.ctl.Ins] = kwargs.get("insList", [])
 
-def Transaction(f):
-    """
-    Anotación para controlar transacciones
-    """
-    def wrapper(*args, **kwargs):
-        return f(*args, **kwargs)
-    return wrapper
-
-
-class UserProfile():
-    """
-    Información del perfil del usuario
-    """
-
-    def __init__(self, **kwargs):
-        pass

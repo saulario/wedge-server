@@ -1,16 +1,27 @@
 WEDGE FRAMEWORK - 
 
-Estructura de capas y niveles de acceso
+ESTRUCTURA DE CAPAS
+===================
 
-+-------------+-------------+-------+--------+----+--------+
-| Cliente Web | Service BUS | Otros |        |    |        |
-+----------------+------------------+        |    |        |
-| Servicios REST | Servicios GRPC   | Junior |    |        |
-+----------+-----+------------------+        |    |        |
-| API, acciones disponibles         |        |    |        |
-+-----------------------------------+--------+    |        |
-| BL, lógica de negocio             |      Senior |        |
-+-----------------------------------+-------------+        |
-| DAL, capa de acceso a datos       |         Arquitecto   |
-+-----------------------------------+----------------------+
+                                    |Log  |    Perfil técnico    |
++-------------+-------------+-------+-----+--------+----+--------+
+| Cliente Web | Service BUS | Otros |     |        |    |        |
++----------------+------------------+-----+        |    |        |
+| Servicios REST | Servicios GRPC   |DEBUG| Junior |    |        |
++----------+-----+------------------+-----+        |    |        |
+| API, acciones disponibles         |INFO |        |    |        |
++-----------------------------------+-----+--------+    |        |
+| BL, lógica de negocio             |DEBUG|      Senior |        |
++-----------------------------------+-----+-------------+        |
+| DAL, capa de acceso a datos       |DEBUG|         Arquitecto   |
++-----------------------------------+-----+----------------------+
 
+NOMENCLATURA
+============
+
+* OOP, aplica PascalCase con el siguiente significado
+    _, __       prefijos, el propio de Python
+    minúsculas  métodos protected
+    Mayúsculas  métodos public
+
+* imperativa, notación C con todo en minúsculas y subrayado como separador
