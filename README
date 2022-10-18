@@ -24,4 +24,16 @@ NOMENCLATURA
     minúsculas  métodos protected
     Mayúsculas  métodos public
 
-* imperativa, notación C con todo en minúsculas y subrayado como separador
+* Imperativa, notación C con todo en minúsculas y subrayado como separador
+
+VALORES NULOS
+=============
+
+*   Como norma general en la base de datos no se admiten valores nulos. La
+    excepción son las foreign keys que puden ser cero o más.
+
+*   Si un valor es None en un Entity, no se envía a la base de datos a no
+    ser que esté explícitamente declarado en el DAL como que admite nulos.
+
+*   Todas las variables deben inicializarse con un Zero Value. Las fechas
+    son un caso especial donde se ha tomado una fecha por defecto como Zero.

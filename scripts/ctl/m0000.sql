@@ -13,9 +13,9 @@ create table usr (
         usrcod          varchar(200) not null,
         usrnom          varchar(200) not null,
         usrpwd          varchar(200) not null,
-        usrfcr          timestamp,
-        usri18          varchar(10),
-        usract          smallint
+        usrfcr          timestamp not null,
+        usri18          varchar(10) not null,
+        usract          smallint not null
 );
 
 comment on table usr is         'Usuarios';
@@ -48,7 +48,7 @@ create table ins (
     insid       bigserial primary key,
     insnom      varchar(40) not null,
     inscliid    bigint not null,
-    insurl      text
+    insurl      text not null
 );
 
 comment on table ins is             'Instancias';

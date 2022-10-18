@@ -58,17 +58,32 @@ class BaseDAL():
     Clase base para los artefactos de acceso a base de datos
     """
 
-    def __init__(self, metadata:MetaData, nombre:str, type:Any=Entity):
+    def __init__(self, metadata:MetaData, nombre:str, type:Any=Entity, nullableColumns=""):
         """
         Reconstruye un objeto tabla por instrospección a partir de los
         metadatos del engine de base de datos
-            :param: metadata:   metadatos
-            :param: nombre:     nombre de la tabla que se reconstruye
-            :param: type:       Tipo que retorna, por defecto Entity
+            :param metadata:            Metadatos
+            :param nombre:              Nombre de la tabla que se reconstruye
+            :param type:                Tipo que retorna, por defecto Entity
+            :param nullable_columns:    Lista de columnas nulables separadas por comas
         """
         self._metadata = metadata
         self._t = Table(nombre, metadata, autoload = True)
         self._type = type
+        self._nullableColumns = nullableColumns.split(",")
+
+    def _removeNullableCols(self, entity:Entity):
+        """
+        Elimina todas las columnas de la entidad que tengan valor None y que no estén 
+        expresamente declaradas en la lista _nullableColumns para que no lleguen al
+        compilador de expresiones.
+        """
+        if not entity:
+            return
+        for col in [ x[0] for x in entity.__dict__ if x[1] == None ]:
+            if col in self._nullableColumns:
+                continue
+            delattr(entity, col)
 
     def Insert(self, conn:Connection, entity:Entity):
         """
@@ -80,6 +95,7 @@ class BaseDAL():
             :return:        entidad persistida (`:class:bl.schema.Entity`)
         """
         t1 = time.time()
+        self._removeNullableCols(entity)
         stmt = self._t.insert(None).values(entity.__dict__)
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })

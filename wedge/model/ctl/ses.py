@@ -32,7 +32,7 @@ class Ses(wedge.model.schema.Entity):
 class SesDAL(wedge.model.schema.BaseDAL):
 
     def __init__(self, metadata, nombre = "ses"):
-        super().__init__(metadata, nombre, type=Ses)
+        super().__init__(metadata, nombre, type=Ses, nullableColumns="sesinsid")
 
     def Delete(self, con:Connection, sescod:str) -> int:
         """
@@ -127,6 +127,7 @@ class SesDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
+        self._removeNullableCols(entity)        
         stmt = t.update(None).values(entity.__dict__).where(and_(
                 t.c.sescod == entity.sescod,
         ))

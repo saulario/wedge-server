@@ -70,6 +70,7 @@ class SusDAL(wedge.model.schema.BaseDAL):
         """
         t1 = time.time()
         t = self._t
+        self._removeNullableCols(entity)        
         stmt = t.update(None).values(entity.__dict__).where(and_(
                 t.c.susid == entity.susid,
         ))
