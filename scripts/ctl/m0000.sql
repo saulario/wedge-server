@@ -10,12 +10,12 @@ drop table if exists usr;
 
 create table usr (
         usrid           bigserial primary key,
-        usrcod          varchar(200) not null,
-        usrnom          varchar(200) not null,
-        usrpwd          varchar(200) not null,
-        usrfcr          timestamp not null,
-        usri18          varchar(10) not null,
-        usract          smallint not null
+        usrcod          varchar(80) not null default '',
+        usrnom          varchar(80) not null default '',
+        usrpwd          varchar(80) not null default '',
+        usrfcr          timestamp not null default '0001-01-01T00:00:00',
+        usri18          varchar(10) not null default '',
+        usract          smallint not null default 0
 );
 
 comment on table usr is         'Usuarios';
@@ -34,21 +34,24 @@ create unique index usr_ix_01 on usr(usrcod);
 
 create table cli (
     cliid       bigserial primary key,
-    clinom      varchar(40) not null
+    clinom      varchar(80) not null default '',
+    cliact      smallint not null default 0
 );
 
 comment on table cli is         'Clientes';
 comment on column cli.cliid is  'Id. de cliente';
 comment on column cli.clinom is 'Nombre';
+comment on column cli.cliact is 'Activo/inactivo';
 
 -------------------------------------------------
 -- instancias
 
 create table ins (
     insid       bigserial primary key,
-    insnom      varchar(40) not null,
-    inscliid    bigint not null,
-    insurl      text not null
+    insnom      varchar(80) not null default '',
+    inscliid    bigint not null default 0,
+    insurl      text not null default '',
+    insact      smallint not null default 0
 );
 
 comment on table ins is             'Instancias';
@@ -56,6 +59,7 @@ comment on column ins.insid is      'Id. secuencia';
 comment on column ins.insnom is     'Nombre';
 comment on column ins.inscliid is   'Id. de cliente';
 comment on column ins.insurl is     'Database URL';
+comment on column ins.insact is     'Activo/inactivo';
 
 create index ins_ix_01 on ins(inscliid);
 
@@ -66,10 +70,10 @@ alter table ins add constraint ins_fk_01 foreign key(inscliid) references cli(cl
 
 create table sus (
     susid       bigserial primary key,
-    sususrid    bigint not null,
-    susinsid    bigint not null,
-    susfcr      timestamp not null,
-    susact      smallint not null
+    sususrid    bigint not null default 0,
+    susinsid    bigint not null default 0,
+    susfcr      timestamp not null default '0001-01-01T00:00:00',
+    susact      smallint not null default 0
 );
 
 comment on table sus is             'Suscripciones';
@@ -90,11 +94,11 @@ alter table sus add constraint sus_fk_02 foreign key(susinsid) references ins(in
 
 create table ses (
     sescod      varchar(40) not null primary key,
-    sesusrid    bigint not null,
+    sesusrid    bigint not null default 0,
     sesinsid    bigint,
-    sesfcr      timestamp not null,
-    sesful      timestamp not null,
-    sesact      smallint not null
+    sesfcr      timestamp not null default '0001-01-01T00:00:00',
+    sesful      timestamp not null default '0001-01-01T00:00:00',
+    sesact      smallint not null default 0
 );
 
 comment on table ses is             'Sesiones';

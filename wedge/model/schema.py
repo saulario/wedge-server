@@ -58,19 +58,18 @@ class BaseDAL():
     Clase base para los artefactos de acceso a base de datos
     """
 
-    def __init__(self, metadata:MetaData, nombre:str, type:Any=Entity, nullableColumns=""):
+    def __init__(self, metadata:MetaData, nombre:str, type:Any=Entity):
         """
         Reconstruye un objeto tabla por instrospección a partir de los
         metadatos del engine de base de datos
             :param metadata:            Metadatos
             :param nombre:              Nombre de la tabla que se reconstruye
             :param type:                Tipo que retorna, por defecto Entity
-            :param nullable_columns:    Lista de columnas nulables separadas por comas
         """
         self._metadata = metadata
         self._t = Table(nombre, metadata, autoload = True)
         self._type = type
-        self._nullableColumns = nullableColumns.split(",")
+        self._nullableColumns = [ x.name for x in self._t.c if x.nullable ]
 
     def _removeNullableCols(self, entity:Entity):
         """

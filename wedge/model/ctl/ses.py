@@ -32,7 +32,7 @@ class Ses(wedge.model.schema.Entity):
 class SesDAL(wedge.model.schema.BaseDAL):
 
     def __init__(self, metadata, nombre = "ses"):
-        super().__init__(metadata, nombre, type=Ses, nullableColumns="sesinsid")
+        super().__init__(metadata, nombre, type=Ses)
 
     def Delete(self, con:Connection, sescod:str) -> int:
         """

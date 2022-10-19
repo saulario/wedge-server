@@ -28,7 +28,7 @@ class TestUsr(unittest.TestCase):
         ses.sescod = uuid.uuid4().hex
         ses.sesusrid = 1
         ses.sesinsid = 2
-        ses.sesfcr = ses.sesful = dt.datetime.utcnow()
+        ses.sesfcr = ses.sesful = dt.datetime.min
         ses.sesact = 1
         ses = sesDAL.Insert(self.ctl_con, ses)
 

@@ -26,8 +26,37 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.cli (
     cliid bigint NOT NULL,
-    clinom character varying(40) NOT NULL
+    clinom character varying(80) DEFAULT ''::character varying NOT NULL,
+    cliact smallint DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: TABLE cli; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.cli IS 'Clientes';
+
+
+--
+-- Name: COLUMN cli.cliid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.cli.cliid IS 'Id. de cliente';
+
+
+--
+-- Name: COLUMN cli.clinom; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.cli.clinom IS 'Nombre';
+
+
+--
+-- Name: COLUMN cli.cliact; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.cli.cliact IS 'Activo/inactivo';
 
 
 --
@@ -55,10 +84,53 @@ ALTER SEQUENCE public.cli_cliid_seq OWNED BY public.cli.cliid;
 
 CREATE TABLE public.ins (
     insid bigint NOT NULL,
-    insnom character varying(40) NOT NULL,
-    inscliid bigint NOT NULL,
-    insurl text
+    insnom character varying(80) DEFAULT ''::character varying NOT NULL,
+    inscliid bigint DEFAULT 0 NOT NULL,
+    insurl text DEFAULT ''::text NOT NULL,
+    insact smallint DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: TABLE ins; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ins IS 'Instancias';
+
+
+--
+-- Name: COLUMN ins.insid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ins.insid IS 'Id. secuencia';
+
+
+--
+-- Name: COLUMN ins.insnom; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ins.insnom IS 'Nombre';
+
+
+--
+-- Name: COLUMN ins.inscliid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ins.inscliid IS 'Id. de cliente';
+
+
+--
+-- Name: COLUMN ins.insurl; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ins.insurl IS 'Database URL';
+
+
+--
+-- Name: COLUMN ins.insact; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ins.insact IS 'Activo/inactivo';
 
 
 --
@@ -86,12 +158,61 @@ ALTER SEQUENCE public.ins_insid_seq OWNED BY public.ins.insid;
 
 CREATE TABLE public.ses (
     sescod character varying(40) NOT NULL,
-    sesusrid bigint NOT NULL,
+    sesusrid bigint DEFAULT 0 NOT NULL,
     sesinsid bigint,
-    sesfcr timestamp without time zone NOT NULL,
-    sesful timestamp without time zone NOT NULL,
-    sesact smallint NOT NULL
+    sesfcr timestamp without time zone DEFAULT '0001-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    sesful timestamp without time zone DEFAULT '0001-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    sesact smallint DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: TABLE ses; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.ses IS 'Sesiones';
+
+
+--
+-- Name: COLUMN ses.sescod; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sescod IS 'Código interno';
+
+
+--
+-- Name: COLUMN ses.sesusrid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sesusrid IS 'Id. de usuario';
+
+
+--
+-- Name: COLUMN ses.sesinsid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sesinsid IS 'Id. de instancia';
+
+
+--
+-- Name: COLUMN ses.sesfcr; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sesfcr IS 'Fecha de creación';
+
+
+--
+-- Name: COLUMN ses.sesful; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sesful IS 'Fecha de última modificación';
+
+
+--
+-- Name: COLUMN ses.sesact; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.ses.sesact IS 'Activa/inactiva';
 
 
 --
@@ -100,11 +221,53 @@ CREATE TABLE public.ses (
 
 CREATE TABLE public.sus (
     susid bigint NOT NULL,
-    sususrid bigint NOT NULL,
-    susinsid bigint NOT NULL,
-    susfcr timestamp without time zone NOT NULL,
-    susact smallint NOT NULL
+    sususrid bigint DEFAULT 0 NOT NULL,
+    susinsid bigint DEFAULT 0 NOT NULL,
+    susfcr timestamp without time zone DEFAULT '0001-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    susact smallint DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: TABLE sus; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.sus IS 'Suscripciones';
+
+
+--
+-- Name: COLUMN sus.susid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.sus.susid IS 'Id. de suscripción';
+
+
+--
+-- Name: COLUMN sus.sususrid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.sus.sususrid IS 'Id. de usuario';
+
+
+--
+-- Name: COLUMN sus.susinsid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.sus.susinsid IS 'Id. de instancia';
+
+
+--
+-- Name: COLUMN sus.susfcr; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.sus.susfcr IS 'Fecha de creación';
+
+
+--
+-- Name: COLUMN sus.susact; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.sus.susact IS 'Activo/inactivo';
 
 
 --
@@ -132,13 +295,69 @@ ALTER SEQUENCE public.sus_susid_seq OWNED BY public.sus.susid;
 
 CREATE TABLE public.usr (
     usrid bigint NOT NULL,
-    usrcod character varying(200) NOT NULL,
-    usrnom character varying(200) NOT NULL,
-    usrpwd character varying(200) NOT NULL,
-    usrfcr timestamp without time zone,
-    usri18 character varying(10),
-    usract smallint
+    usrcod character varying(80) DEFAULT ''::character varying NOT NULL,
+    usrnom character varying(80) DEFAULT ''::character varying NOT NULL,
+    usrpwd character varying(80) DEFAULT ''::character varying NOT NULL,
+    usrfcr timestamp without time zone DEFAULT '0001-01-01 00:00:00'::timestamp without time zone NOT NULL,
+    usri18 character varying(10) DEFAULT ''::character varying NOT NULL,
+    usract smallint DEFAULT 0 NOT NULL
 );
+
+
+--
+-- Name: TABLE usr; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.usr IS 'Usuarios';
+
+
+--
+-- Name: COLUMN usr.usrid; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usrid IS 'Id. secuencia';
+
+
+--
+-- Name: COLUMN usr.usrcod; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usrcod IS 'Código de usuario';
+
+
+--
+-- Name: COLUMN usr.usrnom; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usrnom IS 'Nombre';
+
+
+--
+-- Name: COLUMN usr.usrpwd; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usrpwd IS 'Contraseña';
+
+
+--
+-- Name: COLUMN usr.usrfcr; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usrfcr IS 'Fecha creación';
+
+
+--
+-- Name: COLUMN usr.usri18; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usri18 IS 'Internacionalización';
+
+
+--
+-- Name: COLUMN usr.usract; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usract IS 'Activo/inactivo';
 
 
 --

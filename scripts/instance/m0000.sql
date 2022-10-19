@@ -8,7 +8,7 @@ drop table if exists gpa;
 
 create table gtz (
     gtzid       bigserial primary key,
-    gtznom      varchar(200) not null
+    gtznom      varchar(200) not null default ''
 );
 
 comment on table gtz is         'Timezones';
@@ -22,7 +22,7 @@ create unique index gtz_ix_01 on gtz(gtznom);
 
 create table gpa (
     gpacod      varchar(2) primary key,
-    gpanom      varchar(200) not null
+    gpanom      varchar(200) not null default ''
 );
 
 comment on table gpa is         'Países';
@@ -31,8 +31,8 @@ comment on column gpa.gpanom is 'Nombre';
 
 create table gpb (
     gpbid       bigserial primary key,
-    gpbgpacod   varchar(2) not null,
-    gpbgtzid    bigint not null
+    gpbgpacod   varchar(2) not null default '',
+    gpbgtzid    bigint not null default 0
 );
 
 comment on table gpb is         'Países, zonas horarias';

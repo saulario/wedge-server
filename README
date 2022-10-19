@@ -1,14 +1,40 @@
 WEDGE FRAMEWORK - 
 
+LICENCIA
+========
+
+Ver archivo LICENSE.
+
+QUE ES WEDGE FRAMEWORK
+======================
+
+*   Está pensado para servir de cimientos para desarrollar cualquier aplicación
+    de negocio. Ofrece (u ofrecerá)
+        * Autentificación
+        * Autorización
+        * Gestión de instancias y suscripciones
+        * Soporte de multi-idioma y localización
+        * Tablas genéricas
+        * Facturación de clientes básica
+        * Liquidación de proveedores básica
+        * Gestión de almacén básica
+
+*   Ofrecido como un API, puede utilizarse
+        *   Interfaz local, incluyendo el código python e invocando desde procesos
+            desarrollados ad-hoc
+        *   Interfaz remoto a través de servicios REST (Flask)
+        *   Interfaz remoto a través de servicios gRPC (objetivo futuro)
+
 ESTRUCTURA DE CAPAS
 ===================
 
-                                    |Log  |    Perfil técnico    |
++-----------------------------------+-----+----------------------+
+|                                   |Log  |    Perfil técnico    |
 +-------------+-------------+-------+-----+--------+----+--------+
 | Cliente Web | Service BUS | Otros |     |        |    |        |
-+----------------+------------------+-----+        |    |        |
++-------------+--+----------+-------+-----+        |    |        |
 | Servicios REST | Servicios GRPC   |DEBUG| Junior |    |        |
-+----------+-----+------------------+-----+        |    |        |
++----------------+------------------+-----+        |    |        |
 | API, acciones disponibles         |INFO |        |    |        |
 +-----------------------------------+-----+--------+    |        |
 | BL, lógica de negocio             |DEBUG|      Senior |        |
@@ -16,15 +42,32 @@ ESTRUCTURA DE CAPAS
 | DAL, capa de acceso a datos       |DEBUG|         Arquitecto   |
 +-----------------------------------+-----+----------------------+
 
+*   Las capas DAL, BL y API siguen el patrón singleton. Se pueden instanciar objetos
+    de todas las clases, pero está totalmente desaconsejado pues es innecesario y
+    porque afecta al rendimiento y a los recursos.
+
+*   Capa DAL contiene operaciones CRUD y consultas y actualizaciones que, por 
+    razones de optimización de recursos, requieran un trato particularmente minucioso.
+    Cada DAL puede colaborar con otros DAL.
+
+*   Capa BL es lógica de negocio entendidas como unidades mínimas indivisibles:
+    registro de una factura, albaranar un pedido, etc. Una método de un BL puede colaborar
+    con otros BL y acceder a toda la capa pública de DAL.
+
+*   Capa API incluye acciones que pueden involucrar a varias unidades de lógica de negocio
+    a la vez, todo dentro de una transacción. Por ejemplo albaranar una lista de pedidos de venta
+    y generar una única factura por todos ellos. Un método de un Action solo puede acceder a los 
+    métodos protegidos de otros Action y a la capa pública de BL.
+
 NOMENCLATURA
 ============
 
-* OOP, aplica PascalCase con el siguiente significado
-    _, __       prefijos, el propio de Python
-    minúsculas  métodos protected
-    Mayúsculas  métodos public
+*   OOP, aplica PascalCase con el siguiente significado
+        _, __       prefijos, el propio de Python
+        minúsculas  métodos protected
+        Mayúsculas  métodos public
 
-* Imperativa, notación C con todo en minúsculas y subrayado como separador
+*   Imperativa, notación C con todo en minúsculas y subrayado como separador.
 
 VALORES NULOS
 =============
@@ -33,7 +76,93 @@ VALORES NULOS
     excepción son las foreign keys que puden ser cero o más.
 
 *   Si un valor es None en un Entity, no se envía a la base de datos a no
-    ser que esté explícitamente declarado en el DAL como que admite nulos.
+    ser que esté reconocido en el DAL como que admite nulos. Esta información
+    se recupera del MetaData en el momento de instanciar el DAL.
 
 *   Todas las variables deben inicializarse con un Zero Value. Las fechas
-    son un caso especial donde se ha tomado una fecha por defecto como Zero.
+    son un caso especial donde el valor "min" es el considerado Zero para
+    los tipos date, datetime, time y timedelta.
+
+BASES DE DATOS
+==============
+
+*   La base de datos por defecto es Postgresql. Se utilizan características
+    específicas de esta base de datos como los tipos geospaciales. Si se
+    quiere utilizar otra base de datos se recomienda hacer un fork desde
+    main y actualizar si interesa. No está previsto soportar otras bases de
+    datos.
+
+*   Se utiliza una base de datos de control (wedge_ctl) y una base de datos
+    por instancia creada (wedge_idxxx). Se propone una nomenclatura, pero se
+    puede aplicar la política que se elija en cada despligue.
+
+*   La base de datos de control se configura en el fichero .config global. Las
+    URL de cada una de las bases de datos de instancia se registran en una
+    colunma dentro de la tabla que identifican las instancias (ins).
+
+*   Las bases de datos de tests son fijas (test_ctl, test_id0). Cada equipo
+    de desarrollo debe tener una versión de la base de datos instalada y
+    con un usuario test/test con capacidad de crear bases de datos.
+
+*   Transacciones. Por defecto Postgresql trabaja con autocommit. Cuando se
+    llama a cualquier action del API hay que asegurar que se ha abierto una 
+    transacción y que se controla un rollback en caso de error en tiempo de
+    ejecución. En el resto de casos debería poder terminar el action por 
+    commit sin problemas. Toda la lógica de negocio está pensada para un
+    entorno transaccional. El uso de autocommit puede llevar a información 
+    inconsistente en caso de error.
+
+*   Cada tabla tiene un nombre único de tres letras que no debe repetirse
+    entre la base de datos de control y la de instancia. La única excepción
+    es la tabla de usuarios que, que copia la información al abrir una
+    sesión.
+
+*   Los nombres de columnas son de 6 hasta 9 letras. Las 3 primeras hacen
+    referencia a la propia tabla, los otros 6 son de libre uso. La excepción
+    son las PK de tipo serial que solo son 5 y es el nombre de la tabla + "id".
+
+*   En las FK se recomienda poner 3 caracteres de tabla y luego el nombre de la
+    columna de la tabla referenciada.
+
+*   Los cambios en base de datos se hacen con scripts de migración (Mnnnnn). Cada
+    vez que se ejecuta una migración hay que regenerar los scripts dump.sql de
+    cada base de datos para que los test puedan regenerar la estructura correcta.
+    Los comandos para generar los scripts son los siguientes, aunque los nombres
+    de las bases de datos y usuarios pueden variar dependiendo del entorno elegido.
+
+    pg_dump -h localhost -U devel -W -d wedge_id000 -s -x -O -f instance/dump.sql
+    pg_dump -h localhost -U devel -W -d wedge_ctl -s -x -O -f ctl/dump.sql
+
+*   Para proyectos personalizados, los espacios de tablas w, x, y y z se asegura
+    que están disponibles y no van a generar nunca conflictos con nombres de 
+    tablas del framework estándar.
+
+TIPADO
+======
+
+*   Se recomienda asignar tipos de forma que el linter sea capaz de reconocer
+    los tipos de todas la variables, pero no más. El tipado en Python puede
+    acabar haciendo el código totalmente ilegible.
+
+API
+===
+
+*   El API se compone de actions. A su vez estos se componen de un validador y
+    de la acción propiamente dicha. Una acción no se ejecuta si no ha pasado
+    con éxito el validador.
+
+*   Cada acción recibe un RequestData con la información completa que necesita
+    para el proceso. Cada invocación a una acción recibe un ResponseData que
+    contiene datos retornados por la acción o bien un resultado en el que se
+    especifica el código de error, descripción, explicación y fuente.
+
+TESTS
+=====
+
+*   Los tests se realizan en la capa del API, y deberán cubrir tanto el 
+    validador como la propia acción.
+
+*   Por eficiencia, las bases de datos se reconstruyen por completo en test_00_db
+    para asegurar que la estructura es correcta. Esto no impide que la ejecución de
+    los test sean aislados y repetibles, lo que se busca es velocidad. Las bases
+    de datos no se destruyen al final de los tests.
