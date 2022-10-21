@@ -47,7 +47,7 @@ def validation(func):
 
         session = [ x for x in args if isinstance(x, engine.Session) ][0]
 
-        validator = getattr(self, f"_{func.__name__}Validator", None)
+        validator = getattr(self, f"_validate{func.__name__}", None)
         if not validator:
             return BaseResponse(None, ValidationError().set(session.usr.usri18, "G00001"))
         result = validator(*args, **kwargs)

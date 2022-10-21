@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 import datetime as dt
 import logging
+from pyexpat import model
 import threading
+from tkinter import E
 
 from typing import Union
 
@@ -25,7 +27,33 @@ SESSION_LIFETIME = 3600         # Tiempo de vida de una sesión antes de expirar
 
 class UsrBL(wedge.bl.commons.BaseBL):
 
-    def CheckSession(self, con:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
+    def ComprobarUsuarioDisponible(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr) -> bool:
+        """
+        Comprueba si un usuario está disponible. El código no puede estar utilizado en ningún otro id
+        de usuario sin importar si está activo o no.
+            :param  con:    Conexión a base de datos
+            :param  usr:    Entidad usr
+        """
+        log.debug("-----> Inicio")
+        log.debug(f"\t(usrcod): %s", usr.usrcod)
+        log.debug(f"\t(usrid) : %s", usr.usrid)
+
+        if not usr.usrcod:
+            return False
+        
+        usrDAL = model_usr.getDAL(self._metadata)
+        stmt = usrDAL.Select([ usrDAL.t.c.usrid ]).where(and_(
+            usrDAL.t.c.usrid != usr.usrid,
+            usrDAL.t.c.usrcod == usr.usrcod
+        ))
+        result = usrDAL.Query(con, stmt)
+
+        retval = False if result else True
+
+        log.debug("<----- Fin")
+        return retval
+
+    def ComprobarSesion(self, con:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
         """
         Recupera una sesión si el token es válido. Si algo falla devuelve la sesión a nulo
         sin dar mayor explicación. Se realizan las siguientes tareas.

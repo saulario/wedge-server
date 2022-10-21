@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple, Union
 
 import sqlalchemy
 import sqlalchemy.engine
+import sqlalchemy.schema
 
 import wedge.model.ctl
 import wedge.model.ctl.ins
@@ -37,6 +38,25 @@ class Context():
     """
     def __init__(self, **kwargs):
         self.dbpool:Dict[int, Tuple[sqlalchemy.engine.Engine, sqlalchemy.schema.MetaData]] = {}
+    
+    def getEngine(self, id:int) -> Union[sqlalchemy.engine.Engine, None ]:
+        """
+        Retorna el Engine correspondiente al id de instancia. Si no lo encuentra devuelve None
+            :param  id:     Id de instancia
+            :return:        Engine o None
+        """
+        if not id in self.dbpool: return None
+        return self.dbpool.get(id)[0]
+
+    def getMetaData(self, id:int) -> Union[sqlalchemy.schema.MetaData, None ]:
+        """
+        Retorna el MetaData correspondiente al id de instancia. Si no lo encuentra devuelve None
+            :param  id:     Id de instancia
+            :return:        Engine o None
+        """
+        if not id in self.dbpool: return None
+        return self.dbpool.get(id)[1]
+
 
 def create_context(file:str = None) -> Union[Context, None]:
     """
