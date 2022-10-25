@@ -20,7 +20,7 @@ class TestUsr(unittest.TestCase):
     def test_Update(self):
         req = api_usr.UsrRequest()
         req.data.usr = wedge.model.ctl.Usr()
-        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        result = api_usr.getAction().Update(self.ctl_con, req, self.session)
 
     def test_Login(self):
         action = api_usr.getAction()

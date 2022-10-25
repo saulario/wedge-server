@@ -74,8 +74,7 @@ class BaseRequest():
     """
     Tipo base para los datos de las peticiones
     """
-    def __init__(self):
-        self.data:Any = None
+    pass
 
 
 class BaseResponse():

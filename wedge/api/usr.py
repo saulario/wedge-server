@@ -3,6 +3,7 @@ import logging
 import threading
 
 from typing import Union
+from urllib import request
 
 import sqlalchemy.engine
 import sqlalchemy.schema
@@ -43,12 +44,14 @@ class UsrAction(commons.BaseAction):
 
     def _validateInsert(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
 
+        if not hasattr(data, "usr") or data.usr is None:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00000", "usr"))
+
         usr = bl_usr.getBL().Read(conn, data.usr.usrid, ses)
         if usr:
             return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00002", "usrid"))
 
         return self._validateUpdate(conn, data, ses)
-
 
     @commons.validation
     def Update(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
@@ -58,9 +61,27 @@ class UsrAction(commons.BaseAction):
 
     def _validateUpdate(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
 
+        #TODO generalizar validadores
 
+        # no se actualiza, operativa específica
+        delattr(data.usr, "usrcod")
 
+        data.usr.usrnom = data.usr.usrnom.strip() if data.usr.usrnom is not None else ""
+        if not data.usr.usrnom:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00003", "usrnom"))
 
+        # no se actualiza, operativa específica
+        delattr(data.usr, "usrpwd")
+        delattr(data.usr, "usrfcr")
+
+        data.usr.usri18 = data.usr.usri18.strip() if data.usr.usri18 is not None else ""
+        if not data.usr.usri18:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00003", "usri18"))
+
+        try:
+            data.usr.usract = int(data.usr.usract)
+        except ValueError:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usract, "G00003", "usract"))
 
         return None
     
