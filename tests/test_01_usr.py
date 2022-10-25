@@ -27,17 +27,20 @@ class TestUsr(unittest.TestCase):
         result = action.Login(self.ctl_con, "USUARIO", "123457")
         self.assertIsNone(result)
 
-    def test_CheckSession(self):
+    def test_ComprobarSesion(self):
         sesDAL = model_ses.SesDAL(engine.current_context.getCtlMetaData())
         ses = sesDAL.getEntity()
         ses.sescod = uuid.uuid4().hex
         ses.sesusrid = 1
         ses.sesinsid = 2
-        ses.sesfcr = ses.sesful = dt.datetime.min
+        ses.sesfcr = ses.sesful = dt.datetime.utcnow()
         ses.sesact = 1
         ses = sesDAL.Insert(self.ctl_con, ses)
 
-        ses1 = api_usr.getAction().CheckSession(self.ctl_con, ses.sescod)
+        ses1 = api_usr.getAction().ComprobarSesion(self.ctl_con, ses.sescod)
+        self.assertIsNotNone(ses1)
+        self.assertIsNotNone(ses1.ses)
+        self.assertGreater(ses1.ses.sesful, ses1.ses.sesfcr)
 
 
     @classmethod
@@ -53,7 +56,6 @@ class TestUsr(unittest.TestCase):
         cls.session.ses.sesinsid = 1
 
         cls.id_con = engine.current_context.getEngine(cls.session).connect()
-
 
     @classmethod
     def tearDownClass(cls) -> None:

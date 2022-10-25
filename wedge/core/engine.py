@@ -92,7 +92,14 @@ class Context():
             :param  ses:    Sesión en curso
             :return:        Engine o None
         """
-        id = ses.getInstanciaActiva()
+        return self.getEngineById(ses.getInstanciaActiva())
+
+    def getEngineById(self, id:int) -> Union[sqlalchemy.engine.Engine, None ]:
+        """
+        Retorna el Engine correspondiente al id de instancia asociada a la sesión en curso.
+            :param  id:     Id de instancia
+            :return:        Engine o None
+        """
         if not id in self.dbpool: return None
         return self.dbpool.get(id)[0]
 
@@ -102,7 +109,14 @@ class Context():
             :param  ses:    Sesión en curso
             :return:        Engine o None
         """
-        id = ses.getInstanciaActiva()
+        return self.getMetaDataById(ses.getInstanciaActiva())
+
+    def getMetaDataById(self, id:int) -> Union[sqlalchemy.schema.MetaData, None ]:
+        """
+        Retorna el MetaData correspondiente al id de instancia asociada a la sesión en curso.
+            :param  d:    Sesión en curso
+            :return:        Engine o None
+        """
         if not id in self.dbpool: return None
         return self.dbpool.get(id)[1]
 

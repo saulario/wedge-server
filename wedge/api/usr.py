@@ -29,8 +29,8 @@ class UsrResponse(commons.BaseResponse):
 
 class UsrAction(commons.BaseAction):
 
-    def CheckSession(self, conn:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
-        return bl_usr.getBL().CheckSession(conn, token)    
+    def ComprobarSesion(self, conn:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
+        return bl_usr.getBL().ComprobarSesion(conn, token)    
 
     def Login(self, conn:sqlalchemy.engine.Connection, username:str, password:str) -> Union[engine.Session, None]:
         return bl_usr.getBL().Login(conn, username, password)
