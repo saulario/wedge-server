@@ -27,7 +27,7 @@ SESSION_LIFETIME = 3600         # Tiempo de vida de una sesión antes de expirar
 
 class UsrBL(wedge.bl.commons.BaseBL):
 
-    def ComprobarUsuarioDisponible(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr) -> bool:
+    def UsuarioDisponible(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr) -> bool:
         """
         Comprueba si un usuario está disponible. El código no puede estar utilizado en ningún otro id
         de usuario sin importar si está activo o no.

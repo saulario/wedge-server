@@ -1,9 +1,9 @@
 #!/usr/bin/python3
+import datetime as dt
 import logging
 import threading
 
 from typing import Union
-from urllib import request
 
 import sqlalchemy.engine
 import sqlalchemy.schema
@@ -63,16 +63,25 @@ class UsrAction(commons.BaseAction):
 
         #TODO generalizar validadores
 
-        # no se actualiza, operativa específica
-        delattr(data.usr, "usrcod")
+        data.usr.usrcod = data.usr.usrcod.strip().upper() if data.usr.usrcod is not None else ""
+        if not data.usr.usrcod:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00003", "usrcod"))
+
+        if not bl_usr.getBL().UsuarioDisponible(conn, data.usr):
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G10001", "usrcod"))
 
         data.usr.usrnom = data.usr.usrnom.strip() if data.usr.usrnom is not None else ""
         if not data.usr.usrnom:
             return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00003", "usrnom"))
 
-        # no se actualiza, operativa específica
-        delattr(data.usr, "usrpwd")
-        delattr(data.usr, "usrfcr")
+        data.usr.usrpwd = data.usr.usrpwd.strip() if data.usr.usrpwd is not None else ""
+        if not data.usr.usrpwd:
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00003", "usrpwd"))
+
+        try:
+            data.usr.usrfcr = dt.datetime.fromisoformat(data.usr.usrfcr)
+        except (TypeError, ValueError):
+            return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00005", "usrfcr"))
 
         data.usr.usri18 = data.usr.usri18.strip() if data.usr.usri18 is not None else ""
         if not data.usr.usri18:

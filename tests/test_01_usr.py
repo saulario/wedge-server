@@ -17,6 +17,57 @@ class TestUsr(unittest.TestCase):
         req.usr = wedge.model.ctl.Usr()
         result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
 
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00003")
+        self.assertEqual(result.verr.source, "usrcod")
+
+        req.usr.usrcod = "USUARIO"
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G10001")
+        self.assertEqual(result.verr.source, "usrcod")
+
+        req.usr.usrcod = "USUAR10"
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00003")
+        self.assertEqual(result.verr.source, "usrnom")
+
+        req.usr.usrnom = "EL NOMBRE DEL USUARIO"
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00003")
+        self.assertEqual(result.verr.source, "usrpwd")
+
+        req.usr.usrpwd = "11223344"
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00005")
+        self.assertEqual(result.verr.source, "usrfcr")
+
+        req.usr.usrfcr = "cadena basura"
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00005")
+        self.assertEqual(result.verr.source, "usrfcr")        
+
+        req.usr.usrfcr = dt.datetime.utcnow().isoformat()
+        result = api_usr.getAction().Insert(self.ctl_con, req, self.session)
+        self.assertIsNone(result.data)
+        self.assertIsNotNone(result.verr)
+        self.assertEqual(result.verr.msgid, "G00003")
+        self.assertEqual(result.verr.source, "usri18")
+
+
+
+
+
     def test_Update(self):
         req = api_usr.UsrRequest()
         req.data.usr = wedge.model.ctl.Usr()

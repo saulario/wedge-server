@@ -51,7 +51,7 @@ def validation(func):
             return BaseResponse(None, ValidationError().set(session.usr.usri18, "G00001"))
         result = validator(*args, **kwargs)
         if result:
-            return BaseResponse(None, result)
+            return result
 
         return func(*args, **kwargs)
 
