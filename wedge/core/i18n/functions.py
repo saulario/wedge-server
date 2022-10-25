@@ -4,6 +4,8 @@ from typing import Dict, Union
 
 import wedge.core.engine
 
+DEFAULT_I18N = "es_ES"
+
 def get_message(session:wedge.core.engine.Session, id:str) -> Union[Dict, None]:
     """
     Obtiene un mensaje internacionalizado

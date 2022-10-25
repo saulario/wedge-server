@@ -41,7 +41,7 @@ class UsrBL(wedge.bl.commons.BaseBL):
         if not usr.usrcod:
             return False
         
-        usrDAL = model_usr.getDAL(self._metadata)
+        usrDAL = model_usr.UsrDAL(engine.current_context.getCtlMetaData())
         stmt = usrDAL.Select([ usrDAL.t.c.usrid ]).where(and_(
             usrDAL.t.c.usrid != usr.usrid,
             usrDAL.t.c.usrcod == usr.usrcod
@@ -71,7 +71,8 @@ class UsrBL(wedge.bl.commons.BaseBL):
             log.debug("<----- Salida, no hay datos")
             return None
 
-        sesDAL = model_ses.getDAL(self._metadata)
+        metadata = engine.current_context.getCtlMetaData()
+        sesDAL = model_ses.SesDAL(metadata)
 
         flimit = dt.datetime.utcnow() - dt.timedelta(seconds=SESSION_LIFETIME)
         sesDAL.InvalidarSesionesCaducadas(con, flimit)
@@ -84,8 +85,8 @@ class UsrBL(wedge.bl.commons.BaseBL):
         ses.sesful = dt.datetime.utcnow()
         sesDAL.Update(con, ses)
 
-        usr = model_usr.getDAL(self._metadata).Read(con, ses.sesusrid)
-        insList = model_ins.getDAL(self._metadata).Suscripciones(con, usr.usrid)
+        usr = model_usr.UsrDAL(metadata).Read(con, ses.sesusrid)
+        insList = model_ins.InsDAL(metadata).Suscripciones(con, usr.usrid)
         retval = engine.Session(usr=usr, ses=ses, insList=insList)
 
         log.debug("<----- Fin")
@@ -114,15 +115,16 @@ class UsrBL(wedge.bl.commons.BaseBL):
             log.debug("<----- Salida, no hay datos")
             return None
 
-        usr = model_usr.getDAL(self._metadata).Autenticar(con, username, password)
+        metadata = engine.current_context.getCtlMetaData()
+        usr = model_usr.UsrDAL(metadata).Autenticar(con, username, password)
         if not usr:
             log.debug("<----- Salida, no encontrado el usuario")
             return None
 
-        sesDAL = model_ses.getDAL(self._metadata)
+        sesDAL = model_ses.SesDAL(metadata)
         sesDAL.InvalidarSesionesUsuario(con, usr.usrid)
 
-        insDAL = model_ins.getDAL(self._metadata)
+        insDAL = model_ins.InsDAL(metadata)
         insList = insDAL.Suscripciones(con, usr.usrid)
 
         ses = sesDAL.getEntity()
@@ -138,17 +140,17 @@ class UsrBL(wedge.bl.commons.BaseBL):
         return retval
 
     def Delete(self, con:sqlalchemy.engine.Connection, usrid:int, session:engine.Session) -> int:
-        return model_usr.getDAL(self._metadata).Delete(con, usrid)
+        return model_usr.UsrDAL(engine.current_context.getCtlMetaData()).Delete(con, usrid)
 
     def Insert(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr, session:engine.Session) -> model_usr.Usr:
-        return model_usr.getDAL(self._metadata).Insert(con, usr)
+        return model_usr.UsrDAL(engine.current_context.getCtlMetaData()).Insert(con, usr)
 
     def Read(self, con:sqlalchemy.engine.Connection, usrid:int, session:engine.Session) -> Union[model_usr.Usr, None]:
-        usrDAL = model_usr.getDAL(self._metadata)
+        usrDAL = model_usr.UsrDAL(engine.current_context.getCtlMetaData())
         return usrDAL.Read(con, usrid, list(usrDAL.t.c))
 
     def Update(self, con:sqlalchemy.engine.Connection, usr:model_usr.Usr, session:engine.Session) -> int:
-        return model_usr.getDAL(self._metadata).Update(con, usr)
+        return model_usr.UsrDAL(engine.current_context.getCtlMetaData()).Update(con, usr)
 
 
 ###############################################################################
@@ -156,9 +158,9 @@ class UsrBL(wedge.bl.commons.BaseBL):
 
 _bl = None
 
-def getBL(metadata:sqlalchemy.schema.MetaData) -> UsrBL:
+def getBL() -> UsrBL:
     global _bl
     if _bl is not None: return _bl
     with threading.Lock():
-        _bl = UsrBL(metadata)
+        _bl = UsrBL()
         return _bl

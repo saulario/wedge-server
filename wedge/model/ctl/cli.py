@@ -71,16 +71,3 @@ class CliDAL(wedge.model.schema.BaseDAL):
         result = conn.execute(stmt)
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
-
-
-###############################################################################
-# singleton
-
-_dal = None
-
-def getDAL(metadata:MetaData) -> CliDAL:
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = CliDAL(metadata)
-        return _dal

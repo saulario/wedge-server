@@ -1,13 +1,12 @@
 #!/usr/bin/python3
 import logging
-import threading
 import time
 
 from typing import List, Union
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column, MetaData
+from sqlalchemy.schema import Column
 
 import wedge.model.schema
 
@@ -73,15 +72,4 @@ class GtzDAL(wedge.model.schema.BaseDAL):
         log.debug("\t(DBACCESS)\t(tt): %(t).2f\t\t(stmt): %(stmt)s", { "t" : (time.time() - t1), "stmt" : stmt })
         return result.rowcount
 
-
-###############################################################################
-# singleton
-
-_dal = None
-
-def getDAL(metadata:MetaData) -> GtzDAL:
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = GtzDAL(metadata)
-        return _dal        
+    

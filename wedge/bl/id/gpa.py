@@ -18,29 +18,27 @@ log = logging.getLogger(__name__)
 
 class GpaBL(wedge.bl.commons.BaseBL):
 
-    def Delete(self, con:sqlalchemy.engine.Connection, gpacod:str, session:engine.Session) -> int:
-        return model_gpa.getDAL(self._metadata).Delete(con, gpacod)
+    def Delete(self, conn:sqlalchemy.engine.Connection, gpacod:str, session:engine.Session) -> int:
+        return model_gpa.GpaDAL(engine.current_context.getMetaData(session)).Delete(conn, gpacod)
 
     def Insert(self, con:sqlalchemy.engine.Connection, gpa:model_gpa.Gpa, session:engine.Session) -> model_gpa.Gpa:
-        return model_gpa.getDAL(self._metadata).Insert(con, gpa)
+        return model_gpa.GpaDAL(engine.current_context.getMetaData(session)).Insert(con, gpa)
 
     def Read(self, con:sqlalchemy.engine.Connection, gpacod:str, session:engine.Session) -> Union[model_gpa.Gpa, None]:
-        gpaDAL = model_gpa.getDAL(self._metadata)
+        gpaDAL = model_gpa.GpaDAL(engine.current_context.getMetaData(session))
         return gpaDAL.Read(con, gpacod, list(gpaDAL.t.c))
 
     def Update(self, con:sqlalchemy.engine.Connection, gpa:model_gpa.Gpa, session:engine.Session) -> int:
-        return model_gpa.getDAL(self._metadata).Update(con, gpa)
-
+        return model_gpa.GpaDAL(engine.current_context.getMetaData(session)).Update(con, gpa)
 
 ###############################################################################
 # singleton
-#
 
 _bl = None
 
-def getBL(metadata:sqlalchemy.schema.MetaData) -> GpaBL:
+def getAction() -> GpaBL:
     global _bl
     if _bl is not None: return _bl
     with threading.Lock():
-        _bl = GpaBL(metadata)
+        _bl = GpaBL()
         return _bl

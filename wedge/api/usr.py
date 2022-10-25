@@ -30,20 +30,20 @@ class UsrResponse(commons.BaseResponse):
 class UsrAction(commons.BaseAction):
 
     def CheckSession(self, conn:sqlalchemy.engine.Connection, token:str) -> Union[engine.Session, None]:
-        return bl_usr.getBL(self._metadata).CheckSession(conn, token)    
+        return bl_usr.getBL().CheckSession(conn, token)    
 
     def Login(self, conn:sqlalchemy.engine.Connection, username:str, password:str) -> Union[engine.Session, None]:
-        return bl_usr.getBL(self._metadata).Login(conn, username, password)
+        return bl_usr.getBL().Login(conn, username, password)
 
     @commons.validation
     def Insert(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
         response = UsrResponse()
-        response.data = bl_usr.getBL(self._metadata).Insert(conn, data.usr, ses)
+        response.data = bl_usr.getBL().Insert(conn, data.usr, ses)
         return response
 
     def _validateInsert(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
 
-        usr = bl_usr.getBL(self._metadata).Read(conn, data.usr.usrid, ses)
+        usr = bl_usr.getBL().Read(conn, data.usr.usrid, ses)
         if usr:
             return UsrResponse(None, commons.ValidationError().set(ses.usr.usri18, "G00002", "usrid"))
 
@@ -53,7 +53,7 @@ class UsrAction(commons.BaseAction):
     @commons.validation
     def Update(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
         response = UsrResponse()
-        response.data = bl_usr.getBL(self._metadata).Update(conn, data.usr, ses)
+        response.data = bl_usr.getBL().Update(conn, data.usr, ses)
         return response
 
     def _validateUpdate(self, conn:sqlalchemy.engine.Connection, data:UsrRequest, ses:engine.Session) -> UsrResponse:
@@ -70,9 +70,9 @@ class UsrAction(commons.BaseAction):
 
 _action = None
 
-def getAction(metadata:sqlalchemy.schema.MetaData) -> UsrAction:
+def getAction() -> UsrAction:
     global _action
     if _action is not None: return _action
     with threading.Lock():
-        _action = UsrAction(metadata)
+        _action = UsrAction()
         return _action

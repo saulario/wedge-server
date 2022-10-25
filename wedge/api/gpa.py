@@ -32,7 +32,7 @@ class GpaResponse(commons.BaseResponse):
 class GpaAction(commons.BaseAction):
 
     def Read(self, conn:sqlalchemy.engine.Connection, gpacod:str, session:engine.Session) -> Union[model_id.Gpa, None]:
-        retval = bl_gpa.getBL(self._metadata).Read(conn, gpacod, session)
+        retval = bl_gpa.getBL().Read(conn, gpacod, session)
         return json.dumps(retval, default=lambda d: d.__dict__ if hasattr(d, "__dict__") else d, ensure_ascii=False)
 
     def _InsertValidator(self, conn:sqlalchemy.engine.Connection, data, session:engine.Session):
@@ -57,9 +57,9 @@ class GpaAction(commons.BaseAction):
 
 _action = None
 
-def getAction(metadata:sqlalchemy.schema.MetaData) -> GpaAction:
+def getAction() -> GpaAction:
     global _action
     if _action is not None: return _action
     with threading.Lock():
-        _action = GpaAction(metadata)
+        _action = GpaAction()
         return _action

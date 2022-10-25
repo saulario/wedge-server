@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import logging
-import threading
 import time
 
 from typing import List, Union
@@ -9,9 +8,10 @@ import sqlalchemy
 
 from sqlalchemy import and_
 from sqlalchemy.engine import Connection
-from sqlalchemy.schema import Column, MetaData
+from sqlalchemy.schema import Column
 
-import wedge.model.ctl.sus as sus
+import wedge.core.engine as engine
+import wedge.model.ctl.sus as model_sus
 import wedge.model.schema
 
 log = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class InsDAL(wedge.model.schema.BaseDAL):
 
         t1 = time.time()
 
-        sus_t = sus.getDAL(self._metadata).t
+        sus_t = model_sus.SusDAL(engine.current_context.getCtlMetaData()).t
 
         stmt = self.t.select().join(sus_t).where(and_(
             sus_t.c.sususrid == sususrid,
@@ -106,16 +106,3 @@ class InsDAL(wedge.model.schema.BaseDAL):
 
         log.debug("<----- Fin")
         return result
-
-
-###############################################################################
-# singleton
-
-_dal = None
-
-def getDAL(metadata:MetaData) -> InsDAL:
-    global _dal
-    if _dal is not None: return _dal
-    with threading.Lock():
-        _dal = InsDAL(metadata)
-        return _dal

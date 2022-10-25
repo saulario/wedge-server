@@ -3,9 +3,8 @@ import importlib
 
 from typing import Any
 
-import sqlalchemy.schema
-
 import wedge.core.engine as engine
+import wedge.core.i18n
 
 
 class ValidationError():
@@ -58,16 +57,18 @@ def validation(func):
 
     return wrapper
 
+
 class BaseAction():
     """
     Implementación común para todos los actions del API
     """
-    
-    def __init__(self, metadata:sqlalchemy.schema.MetaData):
-        self._metadata = metadata
-
     def _defaultValidator(self, *args, **kwargs):
-        raise NotImplementedError
+        """
+        Por si no se ha encontrado el validador, aunque el buscador de validadores ya lo 
+        tiene controlado. Para evitar un runtime exception.
+        """
+        return BaseResponse(None, ValidationError().set(wedge.core.i18n.DEFAULT_I18N, "G00001"))
+
 
 class BaseRequest():
     """
@@ -75,6 +76,7 @@ class BaseRequest():
     """
     def __init__(self):
         self.data:Any = None
+
 
 class BaseResponse():
     """
