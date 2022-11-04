@@ -26,6 +26,7 @@ class Usr(wedge.model.schema.Entity):
         self.usrpwd:str         = None
         self.usrfcr:dt.datetime = None
         self.usri18:str         = None
+        self.usreml:str         = None
         self.usract:int         = None
 
 

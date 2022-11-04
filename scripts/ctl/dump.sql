@@ -300,6 +300,7 @@ CREATE TABLE public.usr (
     usrpwd character varying(80) DEFAULT ''::character varying NOT NULL,
     usrfcr timestamp without time zone DEFAULT '0001-01-01 00:00:00'::timestamp without time zone NOT NULL,
     usri18 character varying(10) DEFAULT ''::character varying NOT NULL,
+    usreml text DEFAULT ''::text NOT NULL,
     usract smallint DEFAULT 0 NOT NULL
 );
 
@@ -351,6 +352,13 @@ COMMENT ON COLUMN public.usr.usrfcr IS 'Fecha creación';
 --
 
 COMMENT ON COLUMN public.usr.usri18 IS 'Internacionalización';
+
+
+--
+-- Name: COLUMN usr.usreml; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.usr.usreml IS 'Correo electrónico';
 
 
 --

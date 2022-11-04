@@ -45,9 +45,9 @@ def create_databases():
     eng.execute("insert into cli(clinom) values('CLIENTE 1 DE TEST')")
     eng.execute(f"insert into ins(insnom, inscliid, insurl) values('INSTANCIA 1 DE TEST', '1', '{TEST_URL}/test_id0')")
     eng.execute(f"insert into ins(insnom, inscliid, insurl) values('INSTANCIA 2 DE TEST', '1', '{TEST_URL}/test_id0')")
-    eng.execute("""insert into usr(usrcod, usrnom, usrpwd, usrfcr, usri18, usract) values(
+    eng.execute("""insert into usr(usrcod, usrnom, usrpwd, usrfcr, usri18, usreml, usract) values(
         'USUARIO', 'USUARIO 1 DE TEST', '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
-        '2022-01-01 00:01:00', 'es_ES', 1
+        '2022-01-01 00:01:00', 'es_ES', 'usuario@nomail.com', 1
     )""")
     eng.execute("""insert into sus(sususrid, susinsid, susfcr, susact) values(
         1, 1, '2022-01-01 00:01:00', 1

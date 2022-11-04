@@ -15,6 +15,7 @@ create table usr (
         usrpwd          varchar(80) not null default '',
         usrfcr          timestamp not null default '0001-01-01T00:00:00',
         usri18          varchar(10) not null default '',
+        usreml          text not null default '',
         usract          smallint not null default 0
 );
 
@@ -25,6 +26,7 @@ comment on column usr.usrnom is 'Nombre';
 comment on column usr.usrpwd is 'Contraseña';
 comment on column usr.usrfcr is 'Fecha creación';
 comment on column usr.usri18 is 'Internacionalización';
+comment on column usr.usreml is 'Correo electrónico';
 comment on column usr.usract is 'Activo/inactivo';
 
 create unique index usr_ix_01 on usr(usrcod);
