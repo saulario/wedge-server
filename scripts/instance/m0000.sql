@@ -4,10 +4,13 @@ drop table if exists tca;
 drop table if exists tpa;
 drop table if exists tta;
 
+drop table if exists gxx;
 drop table if exists gdj;
 drop table if exists gdi;
 drop table if exists gcl;
 drop table if exists gpr;
+drop table if exists gcv;
+drop table if exists gcu;
 
 drop table if exists gpb;
 drop table if exists gtz;
@@ -17,6 +20,50 @@ drop table if exists ttc;
 drop table if exists ttm;
 drop table if exists ttp;
 drop table if exists usi;
+
+-------------------------------------------------
+-- Divisa (currency)
+
+create table gcu (
+    gcucod      varchar(5) not null primary key,
+    gcunom      varchar(80) not null
+);
+
+comment on table gcu is             'Divisa';
+comment on column gcu.gcucod is     'Código';
+comment on column gcu.gcunom is     'Descripción';
+
+insert into gcu values ('EUR', 'EURO');
+insert into gcu values ('USD', 'US DOLAR');
+
+create table gcv (
+    gcvid       bigserial primary key,
+    gcvgcucod   varchar(5) not null default '',
+    gcvcer      numeric(13, 6) not null default 0
+);
+
+comment on table gcv is             'Divisa, tipo de cambio';
+comment on column gcv.gcvid is      'Id. interno';
+comment on column gcv.gcvgcucod is  'Código de divisa';
+comment on column gcv.gcvcer is     'Tipo de cambio';
+
+insert into gcv(gcvgcucod, gcvcer) values('USD', 1);
+
+-------------------------------------------------
+-- Configuración general
+
+create table gxx (
+    gxxcod      smallint primary key,
+    gxxgcucod   varchar(5) not null
+);
+
+comment on table gxx is             'Configuración general';
+comment on column gxx.gxxcod is     'Código cero';
+comment on column gxx.gxxgcucod is  'Divisa del sistema';
+
+alter table gxx add constraint gxx_fk_01 foreign key(gxxgcucod) references gcu(gcucod);
+
+insert into gxx values(0, 'EUR');
 
 -------------------------------------------------
 -- Usuario de instancia
@@ -96,6 +143,7 @@ create table gcl (
     gcltlf      varchar(20) not null default '',
     gclpdc      varchar(80) not null default '',
     gcleml      text not null default '',
+    gclgcucod   varchar(5) not null default '',
     gclact      smallint not null default 0
 );
 
@@ -115,13 +163,16 @@ comment on column gcl.gcllon is		'Longitud';
 comment on column gcl.gcltlf is		'Teléfono';
 comment on column gcl.gclpdc is		'Persona de contacto';
 comment on column gcl.gcleml is		'Correo electrónico';
+comment on column gcl.gclgcucod is  'Divisa';
 comment on column gcl.gclact is		'Activo/inactivo';
 
 create index gcl_ix_01 on gcl(gclgpacod);
 create index gcl_ix_02 on gcl(gclgtzid);
+create index gcl_ix_03 on gcl(gclgcucod);
 
 alter table gcl add constraint gcl_fk_01 foreign key(gclgpacod) references gpa(gpacod);
 alter table gcl add constraint gcl_fk_02 foreign key(gclgtzid) references gtz(gtzid);
+alter table gcl add constraint gcl_fk_03 foreign key(gclgcucod) references gcu(gcucod);
 
 -------------------------------------------------
 -- Proveedores
@@ -142,6 +193,7 @@ create table gpr (
     gprtlf      varchar(20) not null default '',
     gprpdc      varchar(80) not null default '',
     gpreml      text not null default '',
+    gprgcucod   varchar(5) not null default '',
     gpract      smallint not null default 0
 );
 
@@ -161,13 +213,17 @@ comment on column gpr.gprlon is		'Longitud';
 comment on column gpr.gprtlf is		'Teléfono';
 comment on column gpr.gprpdc is		'Persona de contacto';
 comment on column gpr.gpreml is		'Correo electrónico';
+comment on column gpr.gprgcucod is  'Divisa';
 comment on column gpr.gpract is		'Activo/inactivo';
 
 create index gpr_ix_01 on gpr(gprgpacod);
 create index gpr_ix_02 on gpr(gprgtzid);
+create index gpr_ix_03 on gpr(gprgcucod);
+
 
 alter table gpr add constraint gpr_fk_01 foreign key(gprgpacod) references gpa(gpacod);
 alter table gpr add constraint gpr_fk_02 foreign key(gprgtzid) references gtz(gtzid);
+alter table gpr add constraint gpr_fk_03 foreign key(gprgcucod) references gcu(gcucod);
 
 -------------------------------------------------
 -- Direcciones
@@ -325,6 +381,7 @@ comment on column ttp.ttpmax is     'Posición final válida [2,999]';
 
 create table tca (
     tcaid       bigserial primary key,
+
     -- estado operativo y administrativo
 
     -- datos identificativos
@@ -337,6 +394,11 @@ create table tca (
     tcare2      varchar(20) not null default '',
     tcare3      varchar(20) not null default '',
     tcare4      varchar(20) not null default '',
+
+    -- divisa
+    tcagcucod   varchar(5) not null default '',
+    tcagcufec   date not null default '0001-01-01',    
+    tcagcucer   numeric(13, 6) not null default 0,
 
     -- tipo de mercancía
     tcattmcod   varchar(20) not null default '',
@@ -373,7 +435,17 @@ create table tca (
     tcadimplt   int not null default 0,
     tcadimlar   numeric(7, 3) not null default 0,
     tcadimalt   numeric(7, 3) not null default 0,
-    tcadimanc   numeric(7, 3) not null default 0
+    tcadimanc   numeric(7, 3) not null default 0,
+
+    -- ingreso
+    
+
+    -- estadísticas
+    tcatpatot   smallint not null default 0,
+    tcatpapdt   smallint not null default 0,
+    tcaing      numeric(13, 2) not null default 0,
+    tcakmt      int not null default 0,
+    tcaeuk      numeric(13, 2) not null default 0
 
 );
 
@@ -383,9 +455,11 @@ create index tca_ix_03 on tca(tcagclraz);
 create index tca_ix_04 on tca(tcagclnom);
 create index tca_ix_05 on tca(tcagclnif);
 create index tca_ix_06 on tca(tcatcocod);
+create index tca_ix_07 on tca(tcagcucod);
 
 alter table tca add constraint tca_fk_01 foreign key(tcagclid) references gcl(gclid);
 alter table tca add constraint tca_fk_06 foreign key(tcattccod) references ttc(ttccod);
+alter table tca add constraint tca_fk_07 foreign key(tcagcucod) references gcu(gcucod);
 
 
 
