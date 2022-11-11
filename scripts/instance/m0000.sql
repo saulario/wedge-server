@@ -1,17 +1,33 @@
 
+-- FALTAN
+--      CONTROL DE AUTORIZACIÓN (AHORA TODOS PUEDEN VER TODO)
+--      ESTADO OPERATIVO
+--      AUDITORÍA
+--      INCIDENCIAS
 
-drop table if exists tca;
+-- FUTURO
+--      ADJUNTOS Y NOTAS
+--      TARIFAS DE CLIENTE
+--      TARIFA DE FLOTA PROPIA
+--      TARIFA DE PROVEEDOR
+--      FACTURACIÓN DE CLIENTE
+--      FACTURACIÓN DE PROVEEDOR
+
 drop table if exists tpa;
+drop table if exists tcb;
+drop table if exists tca;
+drop table if exists ttb;
 drop table if exists tta;
+drop table if exists tdi;
 
 drop table if exists gxx;
-drop table if exists gdj;
-drop table if exists gdi;
+drop table if exists gcf;
 drop table if exists gcl;
 drop table if exists gpr;
 drop table if exists gcv;
 drop table if exists gcu;
 
+drop table if exists gdi;
 drop table if exists gpb;
 drop table if exists gtz;
 drop table if exists gpa;
@@ -19,7 +35,17 @@ drop table if exists gpa;
 drop table if exists ttc;
 drop table if exists ttm;
 drop table if exists ttp;
+
+drop table if exists tco;
+drop table if exists ttr;
+drop table if exists tre;
+drop table if exists tcn;
+
+drop table if exists tup;
+drop table if exists tuo;
+
 drop table if exists usi;
+
 
 -------------------------------------------------
 -- Divisa (currency)
@@ -29,7 +55,7 @@ create table gcu (
     gcunom      varchar(80) not null
 );
 
-comment on table gcu is             'Divisa';
+comment on table gcu is             'Divisas';
 comment on column gcu.gcucod is     'Código';
 comment on column gcu.gcunom is     'Descripción';
 
@@ -42,7 +68,7 @@ create table gcv (
     gcvcer      numeric(13, 6) not null default 0
 );
 
-comment on table gcv is             'Divisa, tipo de cambio';
+comment on table gcv is             'Divisas, tipo de cambio';
 comment on column gcv.gcvid is      'Id. interno';
 comment on column gcv.gcvgcucod is  'Código de divisa';
 comment on column gcv.gcvcer is     'Tipo de cambio';
@@ -50,20 +76,40 @@ comment on column gcv.gcvcer is     'Tipo de cambio';
 insert into gcv(gcvgcucod, gcvcer) values('USD', 1);
 
 -------------------------------------------------
+-- Conceptos de facturación
+
+create table gcf (
+    gcfcod      varchar(10) primary key,
+    gcfnom      varchar(80) not null default '',
+    gcfact      smallint not null default 0
+);
+
+comment on table gcf is             'Conceptos de facturación';
+comment on column gcf.gcfcod is     'Código de concepto';
+comment on column gcf.gcfnom is     'Descripción';
+comment on column gcf.gcfact is     'Activo/inactivo';
+
+insert into gcf values ('FLETE', 'FLETE');
+insert into gcf values ('DETENCION', 'DETENCIÓN');
+insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA');
+
+-------------------------------------------------
 -- Configuración general
 
 create table gxx (
     gxxcod      smallint primary key,
-    gxxgcucod   varchar(5) not null
+    gxxgcucod   varchar(5) not null,
+    gxxgcfcod   varchar(10) not null
 );
 
 comment on table gxx is             'Configuración general';
 comment on column gxx.gxxcod is     'Código cero';
 comment on column gxx.gxxgcucod is  'Divisa del sistema';
+comment on column gxx.gxxgcfcod is  'Código para facturación de flete';
 
 alter table gxx add constraint gxx_fk_01 foreign key(gxxgcucod) references gcu(gcucod);
 
-insert into gxx values(0, 'EUR');
+insert into gxx values(0, 'EUR', 'FLETE');
 
 -------------------------------------------------
 -- Usuario de instancia
@@ -75,7 +121,7 @@ create table usi (
     usieml      text not null default ''
 );
 
-comment on table usi is             'Timezones';
+comment on table usi is             'Usuario de instancia';
 comment on column usi.usiusrid is   'Id. de usuario';
 comment on column usi.usinom is     'Nombre';
 comment on column usi.usieml is     'Correo electrónico';
@@ -96,6 +142,9 @@ comment on column gtz.gtznom is 'Nombre';
 
 create unique index gtz_ix_01 on gtz(gtznom);
 
+insert into gtz(gtznom) values('Europe/Madrid');
+insert into gtz(gtznom) values('Atlantic/Canary');
+
 -------------------------------------------------
 -- Países
 
@@ -108,21 +157,27 @@ comment on table gpa is         'Países';
 comment on column gpa.gpacod is 'Código';
 comment on column gpa.gpanom is 'Nombre';
 
+insert into gpa values ('ES', 'ESPAÑA');
+
 create table gpb (
     gpbid       bigserial primary key,
     gpbgpacod   varchar(2) not null default '',
     gpbgtzid    bigint not null default 0
 );
 
-comment on table gpb is         'Países, zonas horarias';
-comment on column gpb.gpbgpacod is 'Código de país';
-comment on column gpb.gpbgtzid  is 'Código de timezone';
+comment on table gpb is             'Países, zonas horarias';
+comment on column gpb.gpbid is      'Id. interno';
+comment on column gpb.gpbgpacod is  'Código de país';
+comment on column gpb.gpbgtzid is   'Código de timezone';
 
 create index gpb_ix_01 on gpb(gpbgpacod);
 create index gpb_ix_02 on gpb(gpbgpacod);
 
 alter table gpb add constraint gpb_fk_01 foreign key(gpbgpacod) references gpa(gpacod);
 alter table gpb add constraint gpb_fk_02 foreign key(gpbgtzid) references gtz(gtzid);
+
+insert into gpb(gpbgpacod, gpbgtzid) values('ES', 1);
+insert into gpb(gpbgpacod, gpbgtzid) values('ES', 2);
 
 -------------------------------------------------
 -- Clientes
@@ -272,28 +327,191 @@ alter table gdi add constraint gdi_fk_01 foreign key(gdigpacod) references gpa(g
 alter table gdi add constraint gdi_fk_02 foreign key(gdigtzid) references gtz(gtzid);
 
 -------------------------------------------------
--- Direcciones por cliente
+-- Unidades operativas
 
-create table gdj (
-    gdjid       bigserial primary key,
-    gdjgdiid    bigint not null,
-    gdjgclid    bigint not null,
-    gdjeid      varchar(20) not null,
-    gdjobs      varchar(80) not null default ''
+create table tuo (
+    tuocod      varchar(10) primary key,
+    tuonom      varchar(80) not null default '',
+    tuodft      smallint not null default 0,
+    tuoact      smallint not null default 0
 );
 
-comment on table gdj is             'Direcciones por cliente';
-comment on column gdj.gdjid is		'Id. de entrada';
-comment on column gdj.gdjgdiid is	'Id. de dirección';
-comment on column gdj.gdjgclid is	'Id. de cliente';
-comment on column gdj.gdjeid is     'Código externo';
-comment on column gdj.gdjobs is     'Observaciones';
+comment on table tuo is             'Unidades operativas';
+comment on column tuo.tuocod is     'Código de unidad';
+comment on column tuo.tuonom is     'Descripción';
+comment on column tuo.tuodft is     'Unidad por defecto';
+comment on column tuo.tuoact is     'Activo/inactivo';
 
-create index gdj_ix_01 on gdj(gdjgdiid);
-create index gdj_ix_02 on gdj(gdjgclid);
+insert into tuo values ('CENTRAL', 'OFICINAS CENTRALES', 1, 1);
+insert into tuo values ('ESCAT', 'CATALUÑA', 1, 1);
 
-alter table gdj add constraint gdj_fk_01 foreign key(gdjgdiid) references gdi(gdiid);
-alter table gdj add constraint gdj_fk_02 foreign key(gdjgclid) references gcl(gclid);
+create table tup (
+    tupid       bigserial primary key,
+    tuprgl      varchar(20) not null default '',
+    tuppri      int not null default 0,
+    tuptuocod   varchar(10) not null default ''
+);
+
+comment on table tup is             'Unidades operativas, reglas';
+comment on column tup.tupid is      'Id. interno';
+comment on column tup.tuprgl is     'Regla de aplicación';
+comment on column tup.tuppri is     'Prioridad de regla';
+comment on column tup.tuptuocod is  'Código de unidad operativa';
+
+create index tup_ix_01 on tup(tuptuocod);
+
+alter table tup add constraint tup_fk_01 foreign key (tuptuocod) references tuo(tuocod);
+
+insert into tup(tuprgl, tuppri, tuptuocod) values('ES08', 4, 'ESCAT');
+insert into tup(tuprgl, tuppri, tuptuocod) values('ES17', 4, 'ESCAT');
+insert into tup(tuprgl, tuppri, tuptuocod) values('ES25', 4, 'ESCAT');
+insert into tup(tuprgl, tuppri, tuptuocod) values('ES43', 4, 'ESCAT');
+
+-------------------------------------------------
+-- Conductores
+
+create table tco (
+    tcoid       bigserial primary key,
+    tconom      varchar(80) not null,
+
+    tcotuocod   varchar(10) not null default '',
+    tcoact      smallint not null default 0
+
+);
+
+comment on table tco is             'Conductores';
+comment on column tco.tcoid is      'Id. interno';
+comment on column tco.tconom is     'Nombre';
+comment on column tco.tcotuocod is  'Unidad operativa';
+comment on column tco.tcoact is     'Activo/inactivo';
+
+create index tco_ix_01 on tco(tcotuocod);
+
+alter table tco add constraint tco_fk_01 foreign key (tcotuocod) references tuo(tuocod);
+
+-------------------------------------------------
+-- Tractoras
+
+create table ttr (
+    ttrid       bigserial primary key,
+    ttrmat      varchar(20) not null,
+
+    ttrtuocod   varchar(10) not null default '',
+    ttract      smallint not null default 0
+
+);
+
+comment on table ttr is             'Tractoras';
+comment on column ttr.ttrid is      'Id. interno';
+comment on column ttr.ttrmat is     'Matrícula';
+comment on column ttr.ttrtuocod is  'Unidad operativa';
+comment on column ttr.ttract is     'Activo/inactivo';
+
+create index ttr_ix_01 on ttr(ttrtuocod);
+
+alter table ttr add constraint ttr_fk_01 foreign key (ttrtuocod) references tuo(tuocod);
+
+-------------------------------------------------
+-- Remolques
+
+create table tre (
+    treid       bigserial primary key,
+    tremat      varchar(20) not null,
+
+    tretuocod   varchar(10) not null default '',
+    treact      smallint not null default 0
+
+);
+
+comment on table tre is             'Remolques';
+comment on column tre.treid is      'Id. interno';
+comment on column tre.tremat is     'Matrícula';
+comment on column tre.tretuocod is  'Unidad operativa';
+comment on column tre.treact is     'Activo/inactivo';
+
+create index tre_ix_01 on tre(tretuocod);
+
+alter table tre add constraint tre_fk_01 foreign key (tretuocod) references tuo(tuocod);
+
+-------------------------------------------------
+-- Contenedores
+
+create table tcn (
+    tcnid       bigserial primary key,
+    tcnmat      varchar(20) not null,
+
+    tcntuocod   varchar(10) not null default '',
+    tcnact      smallint not null default 0
+
+);
+
+comment on table tcn is             'Contenedores';
+comment on column tcn.tcnid is      'Id. interno';
+comment on column tcn.tcnmat is     'Matrícula';
+comment on column tcn.tcntuocod is  'Unidad operativa';
+comment on column tcn.tcnact is     'Activo/inactivo';
+
+create index tcn_ix_01 on tcn(tcntuocod);
+
+alter table tcn add constraint tcn_fk_01 foreign key (tcntuocod) references tuo(tuocod);
+
+-------------------------------------------------
+-- Tipos de paradas
+
+create table ttp (
+    ttpcod      varchar(5) not null primary key,
+    ttpnom      varchar(80) not null default '',
+	ttpcls		smallint not null default 0,
+	ttpsgn		smallint not null default 0,
+	ttpmin		smallint not null default 0,
+	ttpmax		smallint not null default 0
+);
+
+comment on table ttp is             'Tipos de paradas';
+comment on column ttp.ttpcod is     'Código';
+comment on column ttp.ttpnom is     'Descripción';
+comment on column ttp.ttpcls is     'Clase 0=Principal, 1=Auxiliar entrega, -1=Auxiliar retorno';
+comment on column ttp.ttpsgn is     'Signo 0=Neutral, 1=Incrementa, -1=Decrementa';
+comment on column ttp.ttpmin is     'Posición inicial válida [1,998]';
+comment on column ttp.ttpmax is     'Posición final válida [2,999]';
+
+insert into ttp values ('REC', 'RECOGIDA'       , 0, 1, 1, 998);
+insert into ttp values ('ENT', 'ENTREGA'        , 0, -1, 2, 999);
+insert into ttp values ('DES', 'DESENGANCHE'    , 1, 0, 2, 997);
+insert into ttp values ('ENG', 'ENGANCHE'       , 1, 0, 3, 998);
+insert into ttp values ('LCI', 'LAVADO CISTERNA', 1, 0, 1, 999);
+
+-------------------------------------------------
+-- Direcciones de transporte por cliente
+
+create table tdi (
+    tdiid       bigserial primary key,
+    tdigdiid    bigint not null,
+    tdigclid    bigint not null,
+    tdieid      varchar(20) not null,
+    tdiobs      varchar(80) not null default '',
+    tdiparreq   int not null default 0,
+    tdiparttp   varchar(5),
+    tdipareid   varchar(20) not null default ''
+);
+
+comment on table tdi is             'Direcciones por cliente';
+comment on column tdi.tdiid is		'Id. de entrada';
+comment on column tdi.tdigdiid is	'Id. de dirección';
+comment on column tdi.tdigclid is	'Id. de cliente';
+comment on column tdi.tdieid is     'Código externo';
+comment on column tdi.tdiobs is     'Observaciones';
+comment on column tdi.tdiparreq is  'Requiere parada 0=No, 1=Anterior, 2=Posterior';
+comment on column tdi.tdiparttp is  'Tipo de parada';
+comment on column tdi.tdipareid is  'Código externo del lugar de parada';
+
+create index tdi_ix_01 on tdi(tdigdiid);
+create index tdi_ix_02 on tdi(tdigclid);
+create index tdi_ix_03 on tdi(tdiparttp);
+
+alter table tdi add constraint tdi_fk_01 foreign key(tdigdiid) references gdi(gdiid);
+alter table tdi add constraint tdi_fk_02 foreign key(tdigclid) references gcl(gclid);
+alter table tdi add constraint tdi_fk_03 foreign key(tdiparttp) references ttp(ttpcod);
 
 -------------------------------------------------
 -- Tipos de contenedores
@@ -304,7 +522,7 @@ create table ttc (
 	ttclar		int not null default 0,
 	ttctar		numeric(9,3) not null default 0,
 	ttcpes		numeric(9,3) not null default 0,
-	ttccub		numeric(9,3) not null default 0,
+	ttccub		numeric(9,2) not null default 0,
 	ttclai		numeric(5,2) not null default 0,
 	ttcani		numeric(5,2) not null default 0,
 	ttcali		numeric(5,2) not null default 0,
@@ -325,8 +543,8 @@ comment on column ttc.ttcali is		'Alto interno';
 comment on column ttc.ttcana is		'Ancho apertura de puerta';
 comment on column ttc.ttcala is		'Alto apertura de puerta';
 
-insert into ttc values ('DRY20', 'DRY 20 PIES', 2300, 25000, 33.2, 5.9, 2.35, 2.39, 2.34, 2.28);
-insert into ttc values ('DRY40', 'DRY 40 PIES', 3750, 27600, 67.7, 12.03, 2.35, 2.39, 2.34, 2.28);
+insert into ttc values ('DRY20', 'DRY 20 PIES', 20, 2300, 25000, 33.2, 5.9, 2.35, 2.39, 2.34, 2.28);
+insert into ttc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.35, 2.39, 2.34, 2.28);
 
 -------------------------------------------------
 -- Tipos de mercancía
@@ -357,32 +575,12 @@ comment on column ttm.ttmtmpmin is  'TMP, mínimo';
 comment on column ttm.ttmtmpmax is  'TMP, máximo';
 
 -------------------------------------------------
--- Tipos de paradas
-
-create table ttp (
-    ttpcod      varchar(5) not null primary key,
-    ttpnom      varchar(80) not null default '',
-	ttpcls		smallint not null default 0,
-	ttpsgn		smallint not null default 0,
-	ttpmin		smallint not null default 0,
-	ttpmax		smallint not null default 0
-);
-
-comment on table ttp is             'Tipos de paradas';
-comment on column ttp.ttpcod is     'Código';
-comment on column ttp.ttpnom is     'Descripción';
-comment on column ttp.ttpcls is     'Clase 0=Principal, 1=Auxiliar entrega, -1=Auxiliar retorno';
-comment on column ttp.ttpsgn is     'Signo 0=Neutral, 1=Incrementa, -1=Decrementa';
-comment on column ttp.ttpmin is     'Posición inicial válida [1,998]';
-comment on column ttp.ttpmax is     'Posición final válida [2,999]';
-
--------------------------------------------------
 -- Cargas
 
 create table tca (
     tcaid       bigserial primary key,
 
-    -- estado operativo y administrativo
+    -- estado operativo
 
     -- datos identificativos
     tcagclid    bigint not null default 0,
@@ -411,16 +609,13 @@ create table tca (
     tcatmpmin   numeric(5,2) not null default 0,
     tcatmpmax   numeric(5,2) not null default 0,
 
-    -- contenedor
-    tcatcocod   varchar(20) not null default '',
-    tcattccod   varchar(10),
-
     -- origen
     tcaorgfec   date not null default '0001-01-01',
     tcaorgeid   varchar(20) not null default '',
     tcaorgnom   varchar(80) not null default '',
     tcaorgpcp   varchar(20) not null default '',
-    tcaprgpob   varchar(80) not null default '',
+    tcaorgpob   varchar(80) not null default '',
+    tcaorgtuo   varchar(10) not null default '',
 
     -- destino
     tcadesfec   date not null default '0001-01-01',
@@ -428,41 +623,202 @@ create table tca (
     tcadesnom   varchar(80) not null default '',
     tcadespcp   varchar(20) not null default '',
     tcadespob   varchar(80) not null default '',
+    tcadestuo   varchar(10) not null default '',
 
     -- dimensiones logísticas
-    tcadimpes   numeric(7, 3) not null default 0,
-    tcadimcub   numeric(7, 3) not null default 0,
-    tcadimplt   int not null default 0,
-    tcadimlar   numeric(7, 3) not null default 0,
-    tcadimalt   numeric(7, 3) not null default 0,
-    tcadimanc   numeric(7, 3) not null default 0,
-
-    -- ingreso
-    
+    tcadimplt   int not null default 0,        
+    tcadimpes   numeric(7,2) not null default 0,
+    tcadimcub   numeric(5,2) not null default 0,
+    tcadimlar   numeric(5,2) not null default 0,
+    tcadimalt   numeric(5,2) not null default 0,
+    tcadimanc   numeric(5,2) not null default 0,
 
     -- estadísticas
     tcatpatot   smallint not null default 0,
     tcatpapdt   smallint not null default 0,
-    tcaing      numeric(13, 2) not null default 0,
+    tcaing      numeric(13,2) not null default 0,
     tcakmt      int not null default 0,
-    tcaeuk      numeric(13, 2) not null default 0
+    tcaeuk      numeric(13,2) not null default 0
 
 );
+
+comment on table tca is             'Cargas';
+comment on column tca.tcaid is      'Id. interno';
 
 create index tca_ix_01 on tca(tcagclid);
 create index tca_ix_02 on tca(tcagcleid);
 create index tca_ix_03 on tca(tcagclraz);
 create index tca_ix_04 on tca(tcagclnom);
 create index tca_ix_05 on tca(tcagclnif);
-create index tca_ix_06 on tca(tcatcocod);
-create index tca_ix_07 on tca(tcagcucod);
+create index tca_ix_06 on tca(tcagcucod);
+create index tca_ix_07 on tca(tcaorgtuo);
+create index tca_ix_08 on tca(tcadestuo);
 
 alter table tca add constraint tca_fk_01 foreign key(tcagclid) references gcl(gclid);
-alter table tca add constraint tca_fk_06 foreign key(tcattccod) references ttc(ttccod);
-alter table tca add constraint tca_fk_07 foreign key(tcagcucod) references gcu(gcucod);
+alter table tca add constraint tca_fk_06 foreign key(tcagcucod) references gcu(gcucod);
+alter table tca add constraint tca_fk_07 foreign key(tcaorgtuo) references tuo(tuocod);
+alter table tca add constraint tca_fk_08 foreign key(tcadestuo) references tuo(tuocod);
+
+-------------------------------------------------
+-- Cargas, conceptos facturables
+
+create table tcb (
+    tcbid       bigserial primary key,
+    tcbtcaid    bigint not null,
+    tcbgcfcod   varchar(10) not null default '',
+    tcbgcfnom   varchar(80) not null default '',
+
+    -- falta estado administrativo
+
+    --
+    tcbpcd      numeric(5,2) not null default 0,
+    tcbcan      numeric(13,2) not null default 0,
+
+    tcbpun      numeric(13,2) not null default 0,
+    tcbdto      numeric(13,2) not null default 0,
+    tcbnet      numeric(13,2) not null default 0,
+    tcbtot      numeric(13,2) not null default 0,
+
+    tcbsispun   numeric(13,2) not null default 0,
+    tcbsisdto   numeric(13,2) not null default 0,
+    tcbsisnet   numeric(13,2) not null default 0,
+    tcbsistot   numeric(13,2) not null default 0
+
+);
+
+comment on table tcb is             'Cargas, conceptos facturables';
+comment on column tcb.tcbid is      'Id. interno';
+comment on column tcb.tcbtcaid is   'Carga, id interno';
+comment on column tcb.tcbgcfcod is  'Código de concepto';
 
 
+create index tcb_ix_01 on tcb(tcbtcaid);
+
+alter table tcb add constraint tcb_fk_01 foreign key (tcbtcaid) references tca(tcaid);
 
 
 -------------------------------------------------
 -- Transportes
+
+create table tta (
+    ttaid       bigserial primary key
+);
+
+comment on table tta is             'Transportes';
+comment on column tta.ttaid is      'Id. de transporte';
+
+-------------------------------------------------
+-- Transportes, conceptos pagables
+
+create table ttb (
+    ttbid       bigserial primary key,
+    ttbttaid    bigint not null,
+    ttbgcfcod   varchar(10) not null default '',
+    ttbgcfnom   varchar(80) not null default '',
+
+    -- falta estado administrativo
+
+    --
+    ttbpcd      numeric(5,2) not null default 0,
+    ttbcan      numeric(13,2) not null default 0,
+
+    ttbpun      numeric(13,2) not null default 0,
+    ttbdto      numeric(13,2) not null default 0,
+    ttbnet      numeric(13,2) not null default 0,
+    ttbtot      numeric(13,2) not null default 0,
+
+    ttbsispun   numeric(13,2) not null default 0,
+    ttbsisdto   numeric(13,2) not null default 0,
+    ttbsisnet   numeric(13,2) not null default 0,
+    ttbsistot   numeric(13,2) not null default 0
+
+);
+
+comment on table ttb is             'Transportes, conceptos facturables';
+comment on column ttb.ttbid is      'Id. interno';
+comment on column ttb.ttbttaid is   'Transporte, id interno';
+comment on column ttb.ttbgcfcod is  'Código de concepto';
+
+
+create index ttb_ix_01 on ttb(ttbttaid);
+
+alter table ttb add constraint ttb_fk_01 foreign key (ttbttaid) references tta(ttaid);
+
+-------------------------------------------------
+-- Paradas
+
+create table tpa (
+    tpaid       bigserial primary key,
+
+    tpatcaid    bigint not null,
+    tpatcaseq   int not null default 0,
+    tpare1      varchar(20) not null default '',
+    tpare2      varchar(20) not null default '',
+    tpare3      varchar(20) not null default '',
+    tpare4      varchar(20) not null default '',    
+
+    tpattaid    bigint,
+    tpattaseq   int not null default 0,
+
+    tpattpcod   varchar(5) not null default '',
+    tpattpcls   smallint not null default 0,
+    tpattpsgn   smallint not null default 0,
+
+    -- dirección
+    tpagdiid    bigint,
+    tpagdieid   varchar(20) not null default '',
+    tpagdinom   varchar(80) not null default '',
+    tpagdidir   varchar(200) not null default '',
+    tpagdicpo   varchar(20) not null default '',
+    tpagdipob   varchar(80) not null default '',
+    tpagdigpa   varchar(2) not null,
+    tpagdigtz   bigint not null,
+    tpagdipcp   varchar(20) not null default '',
+    tpagdilat   varchar(20) not null default '',
+    tpagdilon   varchar(20) not null default '',
+    tpagditlf   varchar(20) not null default '',
+    tpagdipdc   varchar(80) not null default '',
+    tpagdieml   text not null default '',
+    tpagdioea   smallint not null default 0,
+    tpagdirmr   smallint not null default 0,
+
+    -- dimensiones logísticas
+    tpadimplt   int not null default 0,        
+    tpadimpes   numeric(7,2) not null default 0,
+    tpadimcub   numeric(5,2) not null default 0,
+
+    -- fechas y planificación
+    tpavisfec   date not null default '0001-01-01',
+
+    tpasolfec   date not null default '0001-01-01',
+    tpasolts0   timestamp not null default '0001-01-01T00:00:00',
+    tpasolts1   timestamp not null default '0001-01-01T00:00:00',
+
+    tpaplnfec   date not null default '0001-01-01',
+    tpaplnts0   timestamp not null default '0001-01-01T00:00:00',
+    tpaplnts1   timestamp not null default '0001-01-01T00:00:00',
+    tpaplnmue   varchar(20) not null default '',
+
+    tpaetatms   timestamp not null default '0001-01-01T00:00:00',
+    tpapostms   timestamp not null default '0001-01-01T00:00:00',
+    tpainitms   timestamp not null default '0001-01-01T00:00:00',
+    tpafintms   timestamp not null default '0001-01-01T00:00:00'
+
+);
+
+comment on table tpa is             'Paradas';
+comment on column tpa.tpaid is      'Id. de parada';
+comment on column tpa.tpatcaid is   'Id. de carga';
+comment on column tpa.tpattaid is   'Id. de transporte';
+comment on column tpa.tpattpcod is  'Tipo de parada';
+comment on column tpa.tpattpcls is  'Clase de parada';
+comment on column tpa.tpattpsgn is  'Signo de parada';
+
+create index tpa_ix_01 on tpa(tpatcaid);
+create index tpa_ix_02 on tpa(tpattaid);
+create index tpa_ix_03 on tpa(tpagdiid);
+
+alter table tpa add constraint tpa_fk_01 foreign key (tpatcaid) references tca(tcaid);
+alter table tpa add constraint tpa_fk_02 foreign key (tpattaid) references tta(ttaid);
+alter table tpa add constraint tpa_fk_03 foreign key (tpagdiid) references gdi(gdiid);
+;
