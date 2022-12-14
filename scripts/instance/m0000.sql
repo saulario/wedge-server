@@ -16,13 +16,16 @@
 drop table if exists tpa;
 drop table if exists tcb;
 drop table if exists tca;
+drop table if exists ttd;
+drop table if exists ttc;
 drop table if exists ttb;
 drop table if exists tta;
 drop table if exists tdi;
 
-drop table if exists ttc;
-drop table if exists ttm;
-drop table if exists ttp;
+drop table if exists txc;
+drop table if exists txe;
+drop table if exists txm;
+drop table if exists txp;
 
 drop table if exists tco;
 drop table if exists ttr;
@@ -196,6 +199,7 @@ create table gcl (
     gclgtzid    bigint not null,
     gcllat      varchar(20) not null default '',
     gcllon      varchar(20) not null default '',
+	gclgeo		geography(POLYGON, 4326),
     gcltlf      varchar(20) not null default '',
     gclpdc      varchar(80) not null default '',
     gcleml      text not null default '',
@@ -216,6 +220,7 @@ comment on column gcl.gclgpacod is  'Código de país';
 comment on column gcl.gclgtzid is	'Id. de timezone';
 comment on column gcl.gcllat is		'Latitud';
 comment on column gcl.gcllon is		'Longitud';
+comment on column gcl.gclgeo is		'Geolocalización';
 comment on column gcl.gcltlf is		'Teléfono';
 comment on column gcl.gclpdc is		'Persona de contacto';
 comment on column gcl.gcleml is		'Correo electrónico';
@@ -246,6 +251,7 @@ create table gpr (
     gprgtzid    bigint not null,
     gprlat      varchar(20) not null default '',
     gprlon      varchar(20) not null default '',
+	gprgeo		geography(POLYGON, 4326),
     gprtlf      varchar(20) not null default '',
     gprpdc      varchar(80) not null default '',
     gpreml      text not null default '',
@@ -266,6 +272,7 @@ comment on column gpr.gprgpacod is  'Código de país';
 comment on column gpr.gprgtzid is	'Id. de timezone';
 comment on column gpr.gprlat is		'Latitud';
 comment on column gpr.gprlon is		'Longitud';
+comment on column gpr.gprgeo is		'Geolocalización';
 comment on column gpr.gprtlf is		'Teléfono';
 comment on column gpr.gprpdc is		'Persona de contacto';
 comment on column gpr.gpreml is		'Correo electrónico';
@@ -295,9 +302,11 @@ create table gdi (
     gdigtzid    bigint not null,
     gdilat      varchar(20) not null default '',
     gdilon      varchar(20) not null default '',
+	gdigeo		geography(POLYGON, 4326),
     gditlf      varchar(20) not null default '',
     gdipdc      varchar(80) not null default '',
     gdieml      text not null default '',
+	gdihub		smallint not null default 0,
     gdioea      smallint not null default 0,
     gdirmr      smallint not null default 0,
     gdiact      smallint not null default 0
@@ -314,9 +323,11 @@ comment on column gdi.gdigpacod is  'Código de país';
 comment on column gdi.gdigtzid is	'Id. de timezone';
 comment on column gdi.gdilat is		'Latitud';
 comment on column gdi.gdilon is		'Longitud';
+comment on column gdi.gdigeo is		'Geolocalización';
 comment on column gdi.gditlf is		'Teléfono';
 comment on column gdi.gdipdc is		'Persona de contacto';
 comment on column gdi.gdieml is		'Correo electrónico';
+comment on column gdi.gdihub is		'Hub';
 comment on column gdi.gdioea is		'Operador económico';
 comment on column gdi.gdirmr is		'Reserva de muelle requerida';
 comment on column gdi.gdiact is		'Activo/inactivo';
@@ -440,7 +451,7 @@ create table tre (
     treid       bigserial primary key,
     tremat      varchar(20) not null default '',
 	trenfl		varchar(20) not null default '',
-	tretip		smallint not null default 0,
+	tretip		smallint not null default 0 check(tretip in (0, 1)),
 
 	trefe0		date not null default '0001-01-01',
 	trefe1		date not null default '0001-01-01',
@@ -454,7 +465,7 @@ comment on table tre is             'Remolques';
 comment on column tre.treid is      'Id. interno';
 comment on column tre.tremat is     'Matrícula';
 comment on column tre.trenfl is     'Número de flota';
-comment on column tre.tretip is		'Tipo [0=Trailer, 1=Bogie]';
+comment on column tre.tretip is		'Tipo [0=Trailer, 1=Dolly]';
 comment on column tre.trefe0 is     'Fecha desde';
 comment on column tre.trefe1 is     'Fecha hasta';
 comment on column tre.tregprid is  	'Código de proveedor';
@@ -498,36 +509,127 @@ alter table tcn add constraint tcn_fk_02 foreign key (tcngprid) references gpr(g
 -------------------------------------------------
 -- Tipos de paradas
 
-create table ttp (
-    ttpcod      varchar(5) not null primary key,
-    ttpnom      varchar(80) not null default '',
-	ttpcls		smallint not null default 0,
-	ttpsgn		smallint not null default 0,
-	ttpmin		smallint not null default 0,
-	ttpmax		smallint not null default 0,
-	ttpparttp	varchar(5),
-	ttppardif	int not null default 0
+create table txp (
+    txpcod      varchar(5) not null primary key,
+    txpnom      varchar(80) not null default '',
+	txpcls		smallint not null default 0 check(txpcls in (-1, 0, 1)),
+	txpsgn		smallint not null default 0 check(txpsgn in (-1, 0, 1)),
+	txpmin		smallint not null default 0 check(txpmin between 0 and 998),
+	txpmax		smallint not null default 0 check(txpmax between 1 and 999),
+	txppartxp	varchar(5),
+	txppardif	int not null default 0,
+	txpact		smallint not null default 0 check(txpact in (0, 1))
 );
 
-comment on table ttp is             'Tipos de paradas';
-comment on column ttp.ttpcod is     'Código';
-comment on column ttp.ttpnom is     'Descripción';
-comment on column ttp.ttpcls is     'Clase 0=Principal, 1=Auxiliar entrega, -1=Auxiliar retorno';
-comment on column ttp.ttpsgn is     'Signo 0=Neutral, 1=Incrementa, -1=Decrementa';
-comment on column ttp.ttpmin is     'Posición inicial válida [1,998]';
-comment on column ttp.ttpmax is     'Posición final válida [2,999]';
-comment on column ttp.ttpparttp is	'Tipo de parada automática';
-comment on column ttp.ttppardif is	'Diferencia en segundos (0=No generar)';
+comment on table txp is             'Tipos de paradas';
+comment on column txp.txpcod is     'Código';
+comment on column txp.txpnom is     'Descripción';
+comment on column txp.txpcls is     'Clase 0=Principal, 1=Auxiliar entrega, -1=Auxiliar retorno';
+comment on column txp.txpsgn is     'Signo 0=Neutral, 1=Incrementa, -1=Decrementa';
+comment on column txp.txpmin is     'Posición inicial válida [0,998]';
+comment on column txp.txpmax is     'Posición final válida [1,999]';
+comment on column txp.txppartxp is	'Tipo de parada automática';
+comment on column txp.txppardif is	'Diferencia en segundos (0=No generar)';
+comment on column txp.txpact is		'Activo/inactivo';
 
-create index ttp_ix_01 on ttp(ttpparttp);
+create index txp_ix_01 on txp(txppartxp);
 
-alter table ttp add constraint ttp_fk_01 foreign key(ttpparttp) references ttp(ttpcod);
+alter table txp add constraint txp_fk_01 foreign key(txppartxp) references txp(txpcod);
 
-insert into ttp values ('REC', 'RECOGIDA'       , 0, 1, 1, 998, null, 0);
-insert into ttp values ('ENT', 'ENTREGA'        , 0, -1, 2, 999, 'REC', 900);
-insert into ttp values ('ENG', 'ENGANCHE'       , 1, 0, 3, 998, null, 0);
-insert into ttp values ('DES', 'DESENGANCHE'    , 1, 0, 2, 997, 'ENG', 900);
-insert into ttp values ('LCI', 'LAVADO CISTERNA', 1, 0, 1, 999, null, 0);
+insert into txp values ('REC', 'RECOGIDA'       , 0,  1, 0, 998, null, 0, 1);
+insert into txp values ('ENT', 'ENTREGA'        , 0, -1, 1, 999, 'REC', 900, 1);
+insert into txp values ('ENG', 'ENGANCHE'       , 1,  0, 2, 998, null, 0, 1);
+insert into txp values ('DES', 'DESENGANCHE'    , 1,  0, 1, 998, 'ENG', 900, 1);
+insert into txp values ('LCI', 'LAVADO CISTERNA', 1,  0, 0, 999, null, 0, 1);
+
+-------------------------------------------------
+-- Tipos de contenedores
+
+create table txc (
+    txccod      varchar(10) not null primary key,
+    txcnom      varchar(80) not null default '',
+	txclar		int not null default 0,
+	txctar		numeric(9,3) not null default 0,
+	txcpes		numeric(9,3) not null default 0,
+	txccub		numeric(9,2) not null default 0,
+	txclai		numeric(5,2) not null default 0,
+	txcani		numeric(5,2) not null default 0,
+	txcali		numeric(5,2) not null default 0,
+	txcana		numeric(5,2) not null default 0,
+	txcala		numeric(5,2) not null default 0,
+	txcact		smallint not null default 0
+);
+
+comment on table txc is             'Tipos de contenedores';
+comment on column txc.txccod is     'Código';
+comment on column txc.txcnom is     'Descripción';
+comment on column txc.txclar is     'Largo en pies';
+comment on column txc.txctar is		'Tara';
+comment on column txc.txcpes is		'Peso carga útil';
+comment on column txc.txccub is		'Capacidad cúbica';
+comment on column txc.txclai is		'Largo interno';
+comment on column txc.txcani is 	'Ancho interno';
+comment on column txc.txcali is		'Alto interno';
+comment on column txc.txcana is		'Ancho apertura de puerta';
+comment on column txc.txcala is		'Alto apertura de puerta';
+comment on column txc.txcact is		'Activo/inactivo';
+
+insert into txc values ('DRY20', 'DRY 20 PIES', 20, 2300, 25000, 33.2, 5.9, 2.35, 2.39, 2.34, 2.28, 1);
+insert into txc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.35, 2.39, 2.34, 2.28, 1);
+
+-------------------------------------------------
+-- Clase de envío
+
+create table txe (
+	txecod		varchar(5) not null primary key,
+	txenom		varchar(80) not null default '',
+	txeact		smallint not null default 0
+);
+
+comment on table txe is				'Tipos de envío';
+comment on column txe.txecod is		'Código';
+comment on column txe.txenom is		'Descripción';
+comment on column txe.txeact is		'Activo/inactivo';
+
+insert into txe values('FTL', 'FULL TRUCK LOAD', 1);
+insert into txe values('LTL', 'LESS THAN TRUCK LOAD', 1);
+insert into txe values('FCL', 'FULL CONTAINER LOAD', 1);
+insert into txe values('LCL', 'LESS THAN CONTAINER LOAD', 1);
+
+-------------------------------------------------
+-- Tipos de mercancía
+
+create table txm (
+    txmcod      varchar(20) not null primary key,
+    txmnom      varchar(80) not null default '',
+    txmadr      smallint not null default 0,
+    txmadrcls   varchar(10) not null default '',
+    txmadrund   int not null default 0,
+    txmadrflp   numeric(5,2) not null default 0,
+    txmtmp      smallint not null default 0,
+    txmtmpstp   numeric(5,2) not null default 0,
+    txmtmpmin   numeric(5,2) not null default 0,
+    txmtmpmax   numeric(5,2) not null default 0,
+	txmact		smallint not null default 0
+);
+
+comment on table txm is             'Tipos de mercancías';
+comment on column txm.txmcod is     'Código';
+comment on column txm.txmnom is     'Descripción';
+comment on column txm.txmadr is     'ADR, mercancía peligrosa';
+comment on column txm.txmadrcls is  'ADR, clase';
+comment on column txm.txmadrund is  'ADR, número UN';
+comment on column txm.txmadrflp is  'ADR, punto inflamabilidad';
+comment on column txm.txmtmp is     'TMP, temperatura controlada';
+comment on column txm.txmtmpstp is  'TMP, set point';
+comment on column txm.txmtmpmin is  'TMP, mínimo';
+comment on column txm.txmtmpmax is  'TMP, máximo';
+comment on column txm.txmact is 	'Activo/inactivo';
+
+insert into txm values('GENERAL', 'CARGA SECA', 0, '', 0, 0, 0, 0, 0, 0, 1);
+insert into txm values('FRA', 'FRIGO 0º', 0, '', 0, 0, 1, 0, -5, 5, 1);
+insert into txm values('FRB', 'FRIGO -10º', 0, '', 0, 0, 1, -10, -15, -5, 1);
+insert into txm values('FRC', 'FRIGO -20º', 0, '', 0, 0, 1, -20, -25, -15, 1);
 
 -------------------------------------------------
 -- Direcciones de transporte por cliente
@@ -538,7 +640,9 @@ create table tdi (
     tdigclid    bigint not null,
     tdieid      varchar(20) not null,
     tdiobs      varchar(80) not null default '',
-    tdiparttp   varchar(5),
+	tditxmcod	varchar(20),
+	tditxecod	varchar(5),
+    tdipartxp   varchar(5),
     tdipardif   int not null default 0,	
     tdipareid   varchar(20) not null default ''
 );
@@ -549,78 +653,23 @@ comment on column tdi.tdigdiid is	'Id. de dirección';
 comment on column tdi.tdigclid is	'Id. de cliente';
 comment on column tdi.tdieid is     'Código externo';
 comment on column tdi.tdiobs is     'Observaciones';
-comment on column tdi.tdiparttp is  'Tipo de parada automática';
+comment on column tdi.tditxmcod is	'Tipo de mercancía';
+comment on column tdi.tditxecod is	'Tipo de envío';
+comment on column tdi.tdipartxp is  'Tipo de parada automática';
 comment on column tdi.tdipardif is  'Diferencia en segundos (0=No generar)';
 comment on column tdi.tdipareid is  'Código externo del lugar de parada';
 
 create index tdi_ix_01 on tdi(tdigdiid);
 create index tdi_ix_02 on tdi(tdigclid);
-create index tdi_ix_03 on tdi(tdiparttp);
+create index tdi_ix_03 on tdi(tdipartxp);
+create index tdi_ix_04 on tdi(tditxmcod);
+create index tdi_ix_05 on tdi(tditxecod);
 
 alter table tdi add constraint tdi_fk_01 foreign key(tdigdiid) references gdi(gdiid);
 alter table tdi add constraint tdi_fk_02 foreign key(tdigclid) references gcl(gclid);
-alter table tdi add constraint tdi_fk_03 foreign key(tdiparttp) references ttp(ttpcod);
-
--------------------------------------------------
--- Tipos de contenedores
-
-create table ttc (
-    ttccod      varchar(10) not null primary key,
-    ttcnom      varchar(80) not null default '',
-	ttclar		int not null default 0,
-	ttctar		numeric(9,3) not null default 0,
-	ttcpes		numeric(9,3) not null default 0,
-	ttccub		numeric(9,2) not null default 0,
-	ttclai		numeric(5,2) not null default 0,
-	ttcani		numeric(5,2) not null default 0,
-	ttcali		numeric(5,2) not null default 0,
-	ttcana		numeric(5,2) not null default 0,
-	ttcala		numeric(5,2) not null default 0
-);
-
-comment on table ttc is             'Tipos de contenedores';
-comment on column ttc.ttccod is     'Código';
-comment on column ttc.ttcnom is     'Descripción';
-comment on column ttc.ttclar is     'Largo en pies';
-comment on column ttc.ttctar is		'Tara';
-comment on column ttc.ttcpes is		'Peso carga útil';
-comment on column ttc.ttccub is		'Capacidad cúbica';
-comment on column ttc.ttclai is		'Largo interno';
-comment on column ttc.ttcani is 	'Ancho interno';
-comment on column ttc.ttcali is		'Alto interno';
-comment on column ttc.ttcana is		'Ancho apertura de puerta';
-comment on column ttc.ttcala is		'Alto apertura de puerta';
-
-insert into ttc values ('DRY20', 'DRY 20 PIES', 20, 2300, 25000, 33.2, 5.9, 2.35, 2.39, 2.34, 2.28);
-insert into ttc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.35, 2.39, 2.34, 2.28);
-
--------------------------------------------------
--- Tipos de mercancía
-
-create table ttm (
-    ttmcod      varchar(20) not null primary key,
-    ttmnom      varchar(80) not null default '',
-    ttmadr      smallint not null default 0,
-    ttmadrcls   varchar(10) not null default '',
-    ttmadrund   int not null default 0,
-    ttmadrflp   numeric(5,2) not null default 0,
-    ttmtmp      smallint not null default 0,
-    ttmtmpstp   numeric(5,2) not null default 0,
-    ttmtmpmin   numeric(5,2) not null default 0,
-    ttmtmpmax   numeric(5,2) not null default 0
-);
-
-comment on table ttm is             'Tipos de mercancías';
-comment on column ttm.ttmcod is     'Código';
-comment on column ttm.ttmnom is     'Descripción';
-comment on column ttm.ttmadr is     'ADR, mercancía peligrosa';
-comment on column ttm.ttmadrcls is  'ADR, clase';
-comment on column ttm.ttmadrund is  'ADR, número UN';
-comment on column ttm.ttmadrflp is  'ADR, punto inflamabilidad';
-comment on column ttm.ttmtmp is     'TMP, temperatura controlada';
-comment on column ttm.ttmtmpstp is  'TMP, set point';
-comment on column ttm.ttmtmpmin is  'TMP, mínimo';
-comment on column ttm.ttmtmpmax is  'TMP, máximo';
+alter table tdi add constraint tdi_fk_03 foreign key(tdipartxp) references txp(txpcod);
+alter table tdi add constraint tdi_fk_04 foreign key(tditxmcod) references txm(txmcod);
+alter table tdi add constraint tdi_fk_05 foreign key(tditxecod) references txe(txecod);
 
 -------------------------------------------------
 -- Cargas
@@ -647,7 +696,7 @@ create table tca (
     tcagcuexr   numeric(13, 6) not null default 0,
 
     -- tipo de mercancía
-    tcattmcod   varchar(20) not null default '',
+    tcatxmcod   varchar(20) not null default '',
     tcaadr      smallint not null default 0,
     tcaadrcls   varchar(10) not null default '',
     tcaadrund   int not null default 0,
@@ -793,6 +842,48 @@ create index ttb_ix_01 on ttb(ttbttaid);
 alter table ttb add constraint ttb_fk_01 foreign key (ttbttaid) references tta(ttaid);
 
 -------------------------------------------------
+-- Transportes, conductores
+
+create table ttc (
+	ttcid		bigserial primary key,
+	ttcttaid	bigint not null,
+	ttcpos		integer not null default 0 check(ttcpos in (0, 1)),
+	ttctcoid	bigint not null,
+	ttctconom	varchar(80) not null default '',
+	ttctconif	varchar(20) not null default ''
+);
+
+comment on table ttc is				'Transportes, conductores';
+comment on column ttc.ttcid is		'Id. interno';
+comment on column ttc.ttcttaid is	'Id. de transporte';
+comment on column ttc.ttcpos is		'Posición [0, 1]';
+comment on column ttc.ttctcoid is	'Conductor, id';
+comment on column ttc.ttctconom is	'Conductor, nombre';
+comment on column ttc.ttctconif is	'Conductor, NIF';
+
+create index ttc_ix_01 on ttc(ttcttaid);
+
+alter table ttc add constraint ttc_fk_01 foreign key(ttcttaid) references tta(ttaid);
+
+-------------------------------------------------
+-- Transportes, remolques
+
+create table ttd (
+	ttdid		bigserial primary key,
+	ttdttaid	bigint not null,
+	ttdpos		integer not null default 0
+);
+
+comment on table ttd is				'Transportes, remolques';
+comment on column ttd.ttdid is		'Id. interno';
+comment on column ttd.ttdttaid is	'Id. de transporte';
+comment on column ttd.ttdpos is		'Posición [0, 1, 2]';
+
+create index ttd_ic_01 on ttd(ttdttaid);
+
+alter table ttd add constraint ttd_fk_01 foreign key(ttdttaid) references tta(ttaid);
+
+-------------------------------------------------
 -- Paradas
 
 create table tpa (
@@ -808,9 +899,9 @@ create table tpa (
     tpattaid    bigint,
     tpattaseq   int not null default 0,
 
-    tpattpcod   varchar(5) not null default '',
-    tpattpcls   smallint not null default 0,
-    tpattpsgn   smallint not null default 0,
+    tpatxpcod   varchar(5) not null default '',
+    tpatxpcls   smallint not null default 0,
+    tpatxpsgn   smallint not null default 0,
 
     -- dirección
     tpagdiid    bigint,
@@ -824,6 +915,7 @@ create table tpa (
     tpagdipcp   varchar(20) not null default '',
     tpagdilat   varchar(20) not null default '',
     tpagdilon   varchar(20) not null default '',
+	tpagdigeo	geography(POLYGON, 4326),
     tpagditlf   varchar(20) not null default '',
     tpagdipdc   varchar(80) not null default '',
     tpagdieml   text not null default '',
@@ -858,9 +950,9 @@ comment on table tpa is             'Paradas';
 comment on column tpa.tpaid is      'Id. de parada';
 comment on column tpa.tpatcaid is   'Id. de carga';
 comment on column tpa.tpattaid is   'Id. de transporte';
-comment on column tpa.tpattpcod is  'Tipo de parada';
-comment on column tpa.tpattpcls is  'Clase de parada';
-comment on column tpa.tpattpsgn is  'Signo de parada';
+comment on column tpa.tpatxpcod is  'Tipo de parada';
+comment on column tpa.tpatxpcls is  'Clase de parada';
+comment on column tpa.tpatxpsgn is  'Signo de parada';
 
 create index tpa_ix_01 on tpa(tpatcaid);
 create index tpa_ix_02 on tpa(tpattaid);
