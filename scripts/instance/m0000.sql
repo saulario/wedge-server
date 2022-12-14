@@ -27,6 +27,7 @@ drop table if exists txe;
 drop table if exists txm;
 drop table if exists txp;
 
+drop table if exists tba;
 drop table if exists tco;
 drop table if exists ttr;
 drop table if exists tre;
@@ -56,15 +57,17 @@ drop table if exists usi;
 
 create table gcu (
     gcucod      varchar(5) not null primary key,
-    gcunom      varchar(80) not null
+    gcunom      varchar(80) not null,
+	gcured		int not null default 0
 );
 
 comment on table gcu is             'Divisas';
 comment on column gcu.gcucod is     'Código';
 comment on column gcu.gcunom is     'Descripción';
+comment on column gcu.gcured is     'Redondeo a decimales';
 
-insert into gcu values ('EUR', 'EURO');
-insert into gcu values ('USD', 'US DOLAR');
+insert into gcu values ('EUR', 'EURO', 2);
+insert into gcu values ('USD', 'US DOLAR', 2);
 
 create table gcv (
     gcvid       bigserial primary key,
@@ -85,7 +88,7 @@ insert into gcv(gcvgcucod, gcvexr) values('USD', 1);
 create table gcf (
     gcfcod      varchar(10) primary key,
     gcfnom      varchar(80) not null default '',
-    gcfact      smallint not null default 0
+    gcfact      smallint not null default 0 check(gcfact in (0, 1))
 );
 
 comment on table gcf is             'Conceptos de facturación';
@@ -93,9 +96,9 @@ comment on column gcf.gcfcod is     'Código de concepto';
 comment on column gcf.gcfnom is     'Descripción';
 comment on column gcf.gcfact is     'Activo/inactivo';
 
-insert into gcf values ('FLETE', 'FLETE');
-insert into gcf values ('DETENCION', 'DETENCIÓN');
-insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA');
+insert into gcf values ('FLETE', 'FLETE', 1);
+insert into gcf values ('DETENCION', 'DETENCIÓN', 1);
+insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA', 1);
 
 -------------------------------------------------
 -- Configuración general
@@ -103,13 +106,15 @@ insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA');
 create table gxx (
     gxxcod      smallint primary key,
     gxxgcucod   varchar(5) not null,
-    gxxgcfcod   varchar(10) not null
+    gxxgcfcod   varchar(10) not null,
+	gxxpundec	integer not null default 0
 );
 
 comment on table gxx is             'Configuración general';
 comment on column gxx.gxxcod is     'Código cero';
 comment on column gxx.gxxgcucod is  'Divisa del sistema';
 comment on column gxx.gxxgcfcod is  'Código para facturación de flete';
+comment on column gxx.gxxpundec is  'Precio unitario, redondeo a decimales';
 
 alter table gxx add constraint gxx_fk_01 foreign key(gxxgcucod) references gcu(gcucod);
 
@@ -204,7 +209,7 @@ create table gcl (
     gclpdc      varchar(80) not null default '',
     gcleml      text not null default '',
     gclgcucod   varchar(5) not null default '',
-    gclact      smallint not null default 0
+    gclact      smallint not null default 0 check(gclact in (0, 1))
 );
 
 comment on table gcl is         	'Clientes';
@@ -256,7 +261,7 @@ create table gpr (
     gprpdc      varchar(80) not null default '',
     gpreml      text not null default '',
     gprgcucod   varchar(5) not null default '',
-    gpract      smallint not null default 0
+    gpract      smallint not null default 0 check(gpract in (0, 1))
 );
 
 comment on table gpr is         	'Clientes';
@@ -306,10 +311,10 @@ create table gdi (
     gditlf      varchar(20) not null default '',
     gdipdc      varchar(80) not null default '',
     gdieml      text not null default '',
-	gdihub		smallint not null default 0,
-    gdioea      smallint not null default 0,
-    gdirmr      smallint not null default 0,
-    gdiact      smallint not null default 0
+	gdihub		smallint not null default 0 check(gdihub in (0, 1)),
+    gdioea      smallint not null default 0 check(gdioea in (0, 1)),
+    gdirmr      smallint not null default 0 check(gdirmr in (0, 1)),
+    gdiact      smallint not null default 0 check(gdiact in (0, 1))
 );
 
 comment on table gdi is             'Direcciones';
@@ -344,8 +349,8 @@ alter table gdi add constraint gdi_fk_02 foreign key(gdigtzid) references gtz(gt
 create table tuo (
     tuocod      varchar(10) primary key,
     tuonom      varchar(80) not null default '',
-    tuodft      smallint not null default 0,
-    tuoact      smallint not null default 0
+    tuodft      smallint not null default 0 check(tuodft in (0, 1)),
+    tuoact      smallint not null default 0 check(tuoact in (0, 1))
 );
 
 comment on table tuo is             'Unidades operativas';
@@ -355,7 +360,7 @@ comment on column tuo.tuodft is     'Unidad por defecto';
 comment on column tuo.tuoact is     'Activo/inactivo';
 
 insert into tuo values ('CENTRAL', 'OFICINAS CENTRALES', 1, 1);
-insert into tuo values ('ESCAT', 'CATALUÑA', 1, 1);
+insert into tuo values ('ESCAT', 'CATALUÑA', 0, 1);
 
 create table tup (
     tupid       bigserial primary key,
@@ -409,6 +414,43 @@ create index tco_ix_02 on tco(tcogprid);
 
 alter table tco add constraint tco_fk_01 foreign key (tcotuocod) references tuo(tuocod);
 alter table tco add constraint tco_fk_02 foreign key (tcogprid) references gpr(gprid);
+
+-------------------------------------------------
+-- Barco/avión
+
+create table tba (
+	tbaid		bigserial primary key,
+	tbanom		varchar(40) not null default '',
+	tbamat		varchar(10) not null default '',
+	tbatip		smallint not null default 0 check(tbatip in (0, 1)),
+	
+	tbafe0		date not null default '0001-01-01',
+	tbafe1		date not null default '0001-01-01',
+
+	tbapr0id	bigint not null,
+	tbapr1id	bigint not null,
+    tbatuocod   varchar(10) not null default ''	
+	
+);
+
+comment on table tba is             'Barcos y aviones';
+comment on column tba.tbaid is      'Id. interno';
+comment on column tba.tbanom is		'Nombre o ruta';
+comment on column tba.tbamat is		'Matrícula / IMO';
+comment on column tba.tbatip is		'Tipo [0=Barco, 1=Avión]';
+comment on column tba.tbafe0 is     'Fecha desde';
+comment on column tba.tbafe1 is     'Fecha hasta';
+comment on column tba.tbapr0id is 	'Proveedor, transportista efectivo';
+comment on column tba.tbapr1id is 	'Proveedor, pagar a';
+comment on column tba.tbatuocod is  'Unidad operativa';
+
+create index tba_ix_01 on tba(tbatuocod);
+create index tba_ix_02 on tba(tbapr0id);
+create index tba_ix_03 on tba(tbapr1id);
+
+alter table tba add constraint tba_fk_01 foreign key (tbatuocod) references tuo(tuocod);
+alter table tba add constraint tba_fk_02 foreign key (tbapr0id) references gpr(gprid);
+alter table tba add constraint tba_fk_03 foreign key (tbapr1id) references gpr(gprid);
 
 -------------------------------------------------
 -- Tractoras
@@ -557,7 +599,7 @@ create table txc (
 	txcali		numeric(5,2) not null default 0,
 	txcana		numeric(5,2) not null default 0,
 	txcala		numeric(5,2) not null default 0,
-	txcact		smallint not null default 0
+	txcact		smallint not null default 0 check(txcact in (0, 1))
 );
 
 comment on table txc is             'Tipos de contenedores';
@@ -583,7 +625,7 @@ insert into txc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.
 create table txe (
 	txecod		varchar(5) not null primary key,
 	txenom		varchar(80) not null default '',
-	txeact		smallint not null default 0
+	txeact		smallint not null default 0 check(txeact in (0, 1))
 );
 
 comment on table txe is				'Tipos de envío';
@@ -602,15 +644,15 @@ insert into txe values('LCL', 'LESS THAN CONTAINER LOAD', 1);
 create table txm (
     txmcod      varchar(20) not null primary key,
     txmnom      varchar(80) not null default '',
-    txmadr      smallint not null default 0,
+    txmadr      smallint not null default 0 check(txmadr in (0, 1)),
     txmadrcls   varchar(10) not null default '',
     txmadrund   int not null default 0,
     txmadrflp   numeric(5,2) not null default 0,
-    txmtmp      smallint not null default 0,
+    txmtmp      smallint not null default 0 check(txmtmp in (0, 1)),
     txmtmpstp   numeric(5,2) not null default 0,
     txmtmpmin   numeric(5,2) not null default 0,
     txmtmpmax   numeric(5,2) not null default 0,
-	txmact		smallint not null default 0
+	txmact		smallint not null default 0 check(txmact in (0, 1))
 );
 
 comment on table txm is             'Tipos de mercancías';
@@ -690,11 +732,6 @@ create table tca (
     tcare3      varchar(20) not null default '',
     tcare4      varchar(20) not null default '',
 
-    -- divisa
-    tcagcucod   varchar(5) not null default '',
-    tcagcufec   date not null default '0001-01-01',    
-    tcagcuexr   numeric(13, 6) not null default 0,
-
     -- tipo de mercancía
     tcatxmcod   varchar(20) not null default '',
     tcaadr      smallint not null default 0,
@@ -747,12 +784,10 @@ create index tca_ix_02 on tca(tcagcleid);
 create index tca_ix_03 on tca(tcagclraz);
 create index tca_ix_04 on tca(tcagclnom);
 create index tca_ix_05 on tca(tcagclnif);
-create index tca_ix_06 on tca(tcagcucod);
 create index tca_ix_07 on tca(tcaorgtuo);
 create index tca_ix_08 on tca(tcadestuo);
 
 alter table tca add constraint tca_fk_01 foreign key(tcagclid) references gcl(gclid);
-alter table tca add constraint tca_fk_06 foreign key(tcagcucod) references gcu(gcucod);
 alter table tca add constraint tca_fk_07 foreign key(tcaorgtuo) references tuo(tuocod);
 alter table tca add constraint tca_fk_08 foreign key(tcadestuo) references tuo(tuocod);
 
@@ -762,23 +797,28 @@ alter table tca add constraint tca_fk_08 foreign key(tcadestuo) references tuo(t
 create table tcb (
     tcbid       bigserial primary key,
     tcbtcaid    bigint not null,
+
+    tcbgclid    bigint not null default 0,
+    tcbgcleid   varchar(20) not null default '',
+    tcbgclraz   varchar(80) not null default '',
+    tcbgclnif   varchar(20) not null default '',	
+    tcbgcucod   varchar(5) not null default '',
+	tcbgcufec	date not null default '0001-01-01',
+    tcbgcuexr   numeric(13, 6) default 0,
     tcbgcfcod   varchar(10) not null default '',
     tcbgcfnom   varchar(80) not null default '',
 
     -- falta estado administrativo
-
     --
     tcbpcd      numeric(5,2) not null default 0,
-    tcbcan      numeric(13,2) not null default 0,
-
-    tcbpun      numeric(13,2) not null default 0,
-    tcbdto      numeric(13,2) not null default 0,
-    tcbnet      numeric(13,2) not null default 0,
+    tcbcan      numeric(13,3) not null default 0,
+    tcbpun      numeric(13,6) not null default 0,
+    tcbdto      numeric(13,6) not null default 0,
+    tcbnet      numeric(13,6) not null default 0,
     tcbtot      numeric(13,2) not null default 0,
-
-    tcbsispun   numeric(13,2) not null default 0,
-    tcbsisdto   numeric(13,2) not null default 0,
-    tcbsisnet   numeric(13,2) not null default 0,
+    tcbsispun   numeric(13,6) not null default 0,
+    tcbsisdto   numeric(13,6) not null default 0,
+    tcbsisnet   numeric(13,6) not null default 0,
     tcbsistot   numeric(13,2) not null default 0
 
 );
@@ -786,12 +826,35 @@ create table tcb (
 comment on table tcb is             'Cargas, conceptos facturables';
 comment on column tcb.tcbid is      'Id. interno';
 comment on column tcb.tcbtcaid is   'Carga, id interno';
-comment on column tcb.tcbgcfcod is  'Código de concepto';
-
+comment on column tcb.tcbgclid is 	'Cliente, id';
+comment on column tcb.tcbgcleid is 	'Cliente, código externo';
+comment on column tcb.tcbgclraz is 	'Cliente, razón social';
+comment on column tcb.tcbgclnif is 	'Cliente, NIF';
+comment on column tcb.tcbgcucod is  'Divisa, código';
+comment on column tcb.tcbgcufec is  'Divisa, fecha de cambio';
+comment on column tcb.tcbgcuexr is  'Divisa, tipo de cambio';
+comment on column tcb.tcbgcfcod is  'Concepto, código';
+comment on column tcb.tcbgcfnom is  'Concepto, descripción';
+comment on column tcb.tcbpcd is		'Descuento, porcentaje';
+comment on column tcb.tcbcan is		'Cantidad a facturar';
+comment on column tcb.tcbpun is		'Precio unitario';
+comment on column tcb.tcbdto is		'Importe descuento';
+comment on column tcb.tcbnet is		'Precio unitario neto';
+comment on column tcb.tcbtot is		'Importe total';
+comment on column tcb.tcbsispun is	'Precio unitario LCY';
+comment on column tcb.tcbsisdto is	'Importe descuento LCY';
+comment on column tcb.tcbsisnet is	'Precio unitario neto LCY';
+comment on column tcb.tcbsistot is	'Importe total LCY';
 
 create index tcb_ix_01 on tcb(tcbtcaid);
+create index tcb_ix_02 on tcb(tcbgclid);
+create index tcb_ix_03 on tcb(tcbgcucod);
+create index tcb_ix_04 on tcb(tcbgcfcod);
 
 alter table tcb add constraint tcb_fk_01 foreign key (tcbtcaid) references tca(tcaid);
+alter table tcb add constraint tcb_fk_02 foreign key (tcbgclid) references gcl(gclid);
+alter table tcb add constraint tcb_fk_03 foreign key (tcbgcucod) references gcu(gcucod);
+alter table tcb add constraint tcb_fk_04 foreign key (tcbgcfcod) references gcf(gcfcod);
 
 
 -------------------------------------------------
@@ -810,36 +873,67 @@ comment on column tta.ttaid is      'Id. de transporte';
 create table ttb (
     ttbid       bigserial primary key,
     ttbttaid    bigint not null,
+	
+    ttbgprid    bigint not null default 0,
+    ttbgpreid   varchar(20) not null default '',
+    ttbgprraz   varchar(80) not null default '',
+    ttbgprnif   varchar(20) not null default '',	
+
+    ttbgcucod   varchar(5) not null default '',
+	ttbgcufec	date not null default '0001-01-01',
+    ttbgcuexr   numeric(13, 6) default 0,
+	
     ttbgcfcod   varchar(10) not null default '',
     ttbgcfnom   varchar(80) not null default '',
 
     -- falta estado administrativo
-
     --
     ttbpcd      numeric(5,2) not null default 0,
-    ttbcan      numeric(13,2) not null default 0,
+    ttbcan      numeric(13,3) not null default 0,
 
-    ttbpun      numeric(13,2) not null default 0,
-    ttbdto      numeric(13,2) not null default 0,
-    ttbnet      numeric(13,2) not null default 0,
+    ttbpun      numeric(13,6) not null default 0,
+    ttbdto      numeric(13,6) not null default 0,
+    ttbnet      numeric(13,6) not null default 0,
     ttbtot      numeric(13,2) not null default 0,
 
-    ttbsispun   numeric(13,2) not null default 0,
-    ttbsisdto   numeric(13,2) not null default 0,
-    ttbsisnet   numeric(13,2) not null default 0,
+    ttbsispun   numeric(13,6) not null default 0,
+    ttbsisdto   numeric(13,6) not null default 0,
+    ttbsisnet   numeric(13,6) not null default 0,
     ttbsistot   numeric(13,2) not null default 0
 
 );
 
 comment on table ttb is             'Transportes, conceptos facturables';
 comment on column ttb.ttbid is      'Id. interno';
-comment on column ttb.ttbttaid is   'Transporte, id interno';
-comment on column ttb.ttbgcfcod is  'Código de concepto';
-
+comment on column ttb.ttbgprid is 	'Proveedor, id';
+comment on column ttb.ttbgpreid is 	'Proveedor, código externo';
+comment on column ttb.ttbgprraz is 	'Proveedor, razón social';
+comment on column ttb.ttbgprnif is 	'Proveedor, NIF';
+comment on column ttb.ttbgcucod is  'Divisa, código';
+comment on column ttb.ttbgcufec is  'Divisa, fecha de cambio';
+comment on column ttb.ttbgcuexr is  'Divisa, tipo de cambio';
+comment on column ttb.ttbgcfcod is  'Concepto, código';
+comment on column ttb.ttbgcfnom is  'Concepto, descripción';
+comment on column ttb.ttbpcd is		'Descuento, porcentaje';
+comment on column ttb.ttbcan is		'Cantidad a facturar';
+comment on column ttb.ttbpun is		'Precio unitario';
+comment on column ttb.ttbdto is		'Importe descuento';
+comment on column ttb.ttbnet is		'Precio unitario neto';
+comment on column ttb.ttbtot is		'Importe total';
+comment on column ttb.ttbsispun is	'Precio unitario LCY';
+comment on column ttb.ttbsisdto is	'Importe descuento LCY';
+comment on column ttb.ttbsisnet is	'Precio unitario neto LCY';
+comment on column ttb.ttbsistot is	'Importe total LCY';
 
 create index ttb_ix_01 on ttb(ttbttaid);
+create index ttb_ix_02 on ttb(ttbgprid);
+create index ttb_ix_03 on ttb(ttbgcucod);
+create index ttb_ix_04 on ttb(ttbgcfcod);
 
 alter table ttb add constraint ttb_fk_01 foreign key (ttbttaid) references tta(ttaid);
+alter table ttb add constraint ttb_fk_02 foreign key (ttbgprid) references gpr(gprid);
+alter table ttb add constraint ttb_fk_03 foreign key (ttbgcucod) references gcu(gcucod);
+alter table ttb add constraint ttb_fk_04 foreign key (ttbgcfcod) references gcf(gcfcod);
 
 -------------------------------------------------
 -- Transportes, conductores
@@ -848,7 +942,7 @@ create table ttc (
 	ttcid		bigserial primary key,
 	ttcttaid	bigint not null,
 	ttcpos		integer not null default 0 check(ttcpos in (0, 1)),
-	ttctcoid	bigint not null,
+	ttctcoid	bigint,
 	ttctconom	varchar(80) not null default '',
 	ttctconif	varchar(20) not null default ''
 );
@@ -862,8 +956,10 @@ comment on column ttc.ttctconom is	'Conductor, nombre';
 comment on column ttc.ttctconif is	'Conductor, NIF';
 
 create index ttc_ix_01 on ttc(ttcttaid);
+create index ttc_ix_02 on ttc(ttctcoid);
 
 alter table ttc add constraint ttc_fk_01 foreign key(ttcttaid) references tta(ttaid);
+alter table ttc add constraint ttc_fk_02 foreign key(ttctcoid) references tco(tcoid);
 
 -------------------------------------------------
 -- Transportes, remolques
@@ -871,17 +967,25 @@ alter table ttc add constraint ttc_fk_01 foreign key(ttcttaid) references tta(tt
 create table ttd (
 	ttdid		bigserial primary key,
 	ttdttaid	bigint not null,
-	ttdpos		integer not null default 0
+	ttdpos		integer not null default 0 check(ttdpos between 0 and 2),
+	ttdtreid	bigint,
+	ttdtremat	varchar(20) not null default '',
+	ttdtrenfl	varchar(20) not null default ''
 );
 
 comment on table ttd is				'Transportes, remolques';
 comment on column ttd.ttdid is		'Id. interno';
 comment on column ttd.ttdttaid is	'Id. de transporte';
 comment on column ttd.ttdpos is		'Posición [0, 1, 2]';
+comment on column ttd.ttdtreid is	'Tractora, id';
+comment on column ttd.ttdtremat is	'Tractora, matrícula';
+comment on column ttd.ttdtrenfl is	'Tractora, número de flota';
 
-create index ttd_ic_01 on ttd(ttdttaid);
+create index ttd_ix_01 on ttd(ttdttaid);
+create index ttd_ix_02 on ttd(ttdtreid);
 
 alter table ttd add constraint ttd_fk_01 foreign key(ttdttaid) references tta(ttaid);
+alter table ttd add constraint ttd_fk_02 foreign key(ttdtreid) references tre(treid);
 
 -------------------------------------------------
 -- Paradas
@@ -919,8 +1023,9 @@ create table tpa (
     tpagditlf   varchar(20) not null default '',
     tpagdipdc   varchar(80) not null default '',
     tpagdieml   text not null default '',
-    tpagdioea   smallint not null default 0,
-    tpagdirmr   smallint not null default 0,
+	tpagdihub	smallint not null default 0 check(tpagdihub in (0, 1)),
+    tpagdioea   smallint not null default 0 check(tpagdioea in (0, 1)),
+    tpagdirmr   smallint not null default 0 check(tpagdirmr in (0, 1)),
 
     -- dimensiones logísticas
     tpadimplt   int not null default 0,        
