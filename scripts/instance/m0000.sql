@@ -49,10 +49,26 @@ drop table if exists gdi;
 drop table if exists gpb;
 drop table if exists gtz;
 drop table if exists gpa;
+drop table if exists gzz;
 
 drop table if exists usi;
 
+-------------------------------------------------
+-- Literales
+create table gzz (
+    gzzid       bigserial primary key,
+    gzzkey      varchar(40) not null default '',
+    gzzi18      varchar(10) not null default '',
+    gzztxt      text not null default ''
+);
 
+comment on table gzz is             'Literales';
+comment on table gzz.gzzid is       'Id. Interno';
+comment on column gzz.gzzkey is     'Código';
+comment on column gzz.gzzi18 is     'Idioma';
+comment on column gzz.gzztxt is     'Texto';
+
+create unique index gzz_ix_01 on gzz(gzzkey, gzzi18);
 
 -------------------------------------------------
 -- Divisa (currency)
@@ -70,6 +86,12 @@ comment on column gcu.gcured is     'Redondeo a decimales';
 
 insert into gcu values ('EUR', 'EURO', 2);
 insert into gcu values ('USD', 'US DOLAR', 2);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.EUR', 'es_ES', 'Euro');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.USD', 'es_ES', 'Dólar americano');
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.EUR', 'en_US', 'Euro');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.USD', 'en_US', 'American dollar');
 
 create table gcv (
     gcvid       bigserial primary key,
@@ -101,6 +123,14 @@ comment on column gcf.gcfact is     'Activo/inactivo';
 insert into gcf values ('FLETE', 'FLETE', 1);
 insert into gcf values ('DETENCION', 'DETENCIÓN', 1);
 insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA', 1);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.FLEET', 'es_ES', 'Flete');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DETENCION', 'es_ES', 'Detención');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DEMURRAGE', 'es_ES', 'Sobreestadía');
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.FLEET', 'en_US', 'Fleet');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DETENCION', 'en_US', 'Detention');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DEMURRAGE', 'en_US', 'Demurrage');
 
 -------------------------------------------------
 -- Configuración general
@@ -170,6 +200,9 @@ comment on column gpa.gpanom is 'Nombre';
 
 insert into gpa values ('ES', 'ESPAÑA');
 
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gpa.gpacod.ES', 'es_ES', 'España');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gpa.gpacod.ES', 'en_US', 'Spain');
+
 create table gpb (
     gpbid       bigserial primary key,
     gpbgpacod   varchar(2) not null default '',
@@ -209,6 +242,7 @@ create table gcl (
     gclpdc      varchar(80) not null default '',
     gcleml      text not null default '',
     gclgcucod   varchar(5) not null default '',
+    gcli18      varchar(10) not null default '',
     gclact      smallint not null default 0 check(gclact in (0, 1))
 );
 
@@ -228,6 +262,7 @@ comment on column gcl.gcltlf is		'Teléfono';
 comment on column gcl.gclpdc is		'Persona de contacto';
 comment on column gcl.gcleml is		'Correo electrónico';
 comment on column gcl.gclgcucod is  'Divisa';
+comment on column gcl.gcli18 is     'Idioma';
 comment on column gcl.gclact is		'Activo/inactivo';
 
 create index gcl_ix_01 on gcl(gclgpacod);
@@ -257,6 +292,7 @@ create table gpr (
     gprpdc      varchar(80) not null default '',
     gpreml      text not null default '',
     gprgcucod   varchar(5) not null default '',
+    gpri18      varchar(10) not null default '',
     gpract      smallint not null default 0 check(gpract in (0, 1))
 );
 
@@ -276,12 +312,12 @@ comment on column gpr.gprtlf is		'Teléfono';
 comment on column gpr.gprpdc is		'Persona de contacto';
 comment on column gpr.gpreml is		'Correo electrónico';
 comment on column gpr.gprgcucod is  'Divisa';
+comment on column gpr.gpri18 is     'Idioma';
 comment on column gpr.gpract is		'Activo/inactivo';
 
 create index gpr_ix_01 on gpr(gprgpacod);
 create index gpr_ix_02 on gpr(gprgtzid);
 create index gpr_ix_03 on gpr(gprgcucod);
-
 
 alter table gpr add constraint gpr_fk_01 foreign key(gprgpacod) references gpa(gpacod);
 alter table gpr add constraint gpr_fk_02 foreign key(gprgtzid) references gtz(gtzid);
@@ -408,13 +444,13 @@ alter table tco add constraint tco_fk_01 foreign key (tcotuocod) references tuo(
 alter table tco add constraint tco_fk_02 foreign key (tcogprid) references gpr(gprid);
 
 -------------------------------------------------
--- Barco/avión
+-- Barco/avión/tren
 
 create table tba (
 	tbaid		bigserial primary key,
 	tbanom		varchar(40) not null default '',
 	tbamat		varchar(10) not null default '',
-	tbatip		smallint not null default 0 check(tbatip in (0, 1)),
+	tbatip		smallint not null default 0 check(tbatip in (0, 1, 2)),
 	
 	tbafe0		date not null default '0001-01-01',
 	tbafe1		date not null default '0001-01-01',
@@ -425,11 +461,11 @@ create table tba (
 	
 );
 
-comment on table tba is             'Barcos y aviones';
+comment on table tba is             'Barcos, aviones, trenes';
 comment on column tba.tbaid is      'Id. interno';
 comment on column tba.tbanom is		'Nombre o ruta';
 comment on column tba.tbamat is		'Matrícula / IMO';
-comment on column tba.tbatip is		'Tipo [0=Barco, 1=Avión]';
+comment on column tba.tbatip is		'Tipo [0=Barco, 1=Avión, 2=Tren]';
 comment on column tba.tbafe0 is     'Fecha desde';
 comment on column tba.tbafe1 is     'Fecha hasta';
 comment on column tba.tbapr0id is 	'Proveedor, transportista efectivo';
@@ -443,6 +479,10 @@ create index tba_ix_03 on tba(tbapr1id);
 alter table tba add constraint tba_fk_01 foreign key (tbatuocod) references tuo(tuocod);
 alter table tba add constraint tba_fk_02 foreign key (tbapr0id) references gpr(gprid);
 alter table tba add constraint tba_fk_03 foreign key (tbapr1id) references gpr(gprid);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.0', 'es_ES', 'Barco');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.1', 'es_ES', 'Avión');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.2', 'es_ES', 'Tren');
 
 -------------------------------------------------
 -- Tractoras
@@ -511,6 +551,9 @@ create index tre_ix_02 on tre(tregprid);
 alter table tre add constraint tre_fk_01 foreign key (tretuocod) references tuo(tuocod);
 alter table tre add constraint tre_fk_02 foreign key (tregprid) references gpr(gprid);
 
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tre.tretip.0', 'es_ES', 'Trailer');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tre.tretip.1', 'es_ES', 'Dolly');
+
 -------------------------------------------------
 -- Contenedores
 
@@ -544,13 +587,13 @@ alter table tcn add constraint tcn_fk_02 foreign key (tcngprid) references gpr(g
 -- Tipos de paradas
 
 create table txp (
-    txpcod      varchar(5) not null primary key,
+    txpcod      varchar(10) not null primary key,
     txpnom      varchar(80) not null default '',
-	txpcls		smallint not null default 0 check(txpcls in (-1, 0, 1)),
+	txpcls		smallint not null default 0 check(txpcls in (0, 1, 2)),
 	txpsgn		smallint not null default 0 check(txpsgn in (-1, 0, 1)),
 	txpmin		smallint not null default 0 check(txpmin between 0 and 998),
 	txpmax		smallint not null default 0 check(txpmax between 1 and 999),
-	txppartxp	varchar(5),
+	txppartxp	varchar(10),
 	txppardif	int not null default 0,
 	txpact		smallint not null default 0 check(txpact in (0, 1))
 );
@@ -575,6 +618,10 @@ insert into txp values ('ENT', 'ENTREGA'        , 0, -1, 1, 999, 'REC', 900, 1);
 insert into txp values ('ENG', 'ENGANCHE'       , 1,  0, 2, 998, null, 0, 1);
 insert into txp values ('DES', 'DESENGANCHE'    , 1,  0, 1, 998, 'ENG', 900, 1);
 insert into txp values ('LCI', 'LAVADO CISTERNA', 1,  0, 0, 999, null, 0, 1);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.0', 'es_ES', 'Principal');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.1', 'es_ES', 'Auxiliar');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.2', 'es_ES', 'Retorno');
 
 -------------------------------------------------
 -- Tipos de contenedores
@@ -615,7 +662,7 @@ insert into txc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.
 -- Clase de envío
 
 create table txe (
-	txecod		varchar(5) not null primary key,
+	txecod		varchar(10) not null primary key,
 	txenom		varchar(80) not null default '',
 	txeact		smallint not null default 0 check(txeact in (0, 1))
 );
@@ -669,7 +716,7 @@ insert into txm values('FRC', 'FRIGO -20º', 0, '', 0, 0, 1, -20, -25, -15, 1);
 -- Códigos TARIC
 
 create table tct (
-    tctcod      varchar(5) primary key,
+    tctcod      varchar(10) primary key,
     tctnom      text not null default '',
     tctact      smallint not null default 0 check(tctact in (0, 1))
 );
@@ -779,7 +826,7 @@ insert into tct values ('99', 'ENVÍOS FORMADOS POR UN CONJUNTO HETEROGÉNEO DE 
 -- Incoterm
 
 create table tit (
-    titcod      varchar(5) primary key,
+    titcod      varchar(10) primary key,
     titnom      varchar(80) not null default '',
 	titact		smallint not null default 0 check(titact in (0, 1))
 );
@@ -811,10 +858,10 @@ create table tdi (
     tdieid      varchar(20) not null,
     tdiobs      varchar(80) not null default '',
 	tditxmcod	varchar(20),
-	tditxecod	varchar(5),
-    tditctcod   varchar(5),
-    tdititcod   varchar(5),
-    tdipartxp   varchar(5),
+	tditxecod	varchar(10),
+    tditctcod   varchar(10),
+    tdititcod   varchar(10),
+    tdipartxp   varchar(10),
     tdipardif   int not null default 0,	
     tdipareid   varchar(20) not null default ''
 );
@@ -1106,7 +1153,11 @@ create table ttd (
 	ttdpos		integer not null default 0 check(ttdpos between 0 and 2),
 	ttdtreid	bigint,
 	ttdtremat	varchar(20) not null default '',
-	ttdtrenfl	varchar(20) not null default ''
+	ttdtrenfl	varchar(20) not null default '',
+    ttdtmp      smallint not null default 0 check(ttdtmp in (0, 1)),
+    ttdtmpstp   numeric(5,2) not null default 0,
+    ttdtmpmin   numeric(5,2) not null default 0,
+    ttdtmpmax   numeric(5,2) not null default 0
 );
 
 comment on table ttd is				'Transportes, remolques';
@@ -1116,6 +1167,10 @@ comment on column ttd.ttdpos is		'Posición [0, 1, 2]';
 comment on column ttd.ttdtreid is	'Tractora, id';
 comment on column ttd.ttdtremat is	'Tractora, matrícula';
 comment on column ttd.ttdtrenfl is	'Tractora, número de flota';
+comment on column ttd.ttdtmp is     'TMP, temperatura controlada';
+comment on column ttd.ttdtmpstp is  'TMP, set point';
+comment on column ttd.ttdtmpmin is  'TMP, mínimo';
+comment on column ttd.ttdtmpmax is  'TMP, máximo';
 
 create index ttd_ix_01 on ttd(ttdttaid);
 create index ttd_ix_02 on ttd(ttdtreid);
@@ -1139,7 +1194,7 @@ create table tpa (
     tpattaid    bigint,
     tpattaseq   int not null default 0,
 
-    tpatxpcod   varchar(5) not null default '',
+    tpatxpcod   varchar(10) not null default '',
     tpatxpcls   smallint not null default 0,
     tpatxpsgn   smallint not null default 0,
 
