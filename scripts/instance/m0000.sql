@@ -27,6 +27,8 @@ drop table if exists txe;
 drop table if exists txm;
 drop table if exists txp;
 
+drop table if exists tct;
+drop table if exists tit;
 drop table if exists tba;
 drop table if exists tco;
 drop table if exists ttr;
@@ -47,10 +49,26 @@ drop table if exists gdi;
 drop table if exists gpb;
 drop table if exists gtz;
 drop table if exists gpa;
+drop table if exists gzz;
 
 drop table if exists usi;
 
+-------------------------------------------------
+-- Literales
+create table gzz (
+    gzzid       bigserial primary key,
+    gzzkey      varchar(40) not null default '',
+    gzzi18      varchar(10) not null default '',
+    gzztxt      text not null default ''
+);
 
+comment on table gzz is             'Literales';
+comment on table gzz.gzzid is       'Id. Interno';
+comment on column gzz.gzzkey is     'Código';
+comment on column gzz.gzzi18 is     'Idioma';
+comment on column gzz.gzztxt is     'Texto';
+
+create unique index gzz_ix_01 on gzz(gzzkey, gzzi18);
 
 -------------------------------------------------
 -- Divisa (currency)
@@ -68,6 +86,12 @@ comment on column gcu.gcured is     'Redondeo a decimales';
 
 insert into gcu values ('EUR', 'EURO', 2);
 insert into gcu values ('USD', 'US DOLAR', 2);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.EUR', 'es_ES', 'Euro');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.USD', 'es_ES', 'Dólar americano');
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.EUR', 'en_US', 'Euro');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcu.gcucod.USD', 'en_US', 'American dollar');
 
 create table gcv (
     gcvid       bigserial primary key,
@@ -99,6 +123,14 @@ comment on column gcf.gcfact is     'Activo/inactivo';
 insert into gcf values ('FLETE', 'FLETE', 1);
 insert into gcf values ('DETENCION', 'DETENCIÓN', 1);
 insert into gcf values ('DEMURRAGE', 'SOBREESTADÍA', 1);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.FLEET', 'es_ES', 'Flete');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DETENCION', 'es_ES', 'Detención');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DEMURRAGE', 'es_ES', 'Sobreestadía');
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.FLEET', 'en_US', 'Fleet');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DETENCION', 'en_US', 'Detention');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gcf.gcfcod.DEMURRAGE', 'en_US', 'Demurrage');
 
 -------------------------------------------------
 -- Configuración general
@@ -168,6 +200,9 @@ comment on column gpa.gpanom is 'Nombre';
 
 insert into gpa values ('ES', 'ESPAÑA');
 
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gpa.gpacod.ES', 'es_ES', 'España');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('gpa.gpacod.ES', 'en_US', 'Spain');
+
 create table gpb (
     gpbid       bigserial primary key,
     gpbgpacod   varchar(2) not null default '',
@@ -202,13 +237,12 @@ create table gcl (
     gclpob      varchar(80) not null default '',
     gclgpacod   varchar(2) not null,
     gclgtzid    bigint not null,
-    gcllat      varchar(20) not null default '',
-    gcllon      varchar(20) not null default '',
 	gclgeo		geography(POLYGON, 4326),
     gcltlf      varchar(20) not null default '',
     gclpdc      varchar(80) not null default '',
     gcleml      text not null default '',
     gclgcucod   varchar(5) not null default '',
+    gcli18      varchar(10) not null default '',
     gclact      smallint not null default 0 check(gclact in (0, 1))
 );
 
@@ -223,13 +257,12 @@ comment on column gcl.gclcpo is		'Código postal';
 comment on column gcl.gclpob is		'Población';
 comment on column gcl.gclgpacod is  'Código de país';
 comment on column gcl.gclgtzid is	'Id. de timezone';
-comment on column gcl.gcllat is		'Latitud';
-comment on column gcl.gcllon is		'Longitud';
 comment on column gcl.gclgeo is		'Geolocalización';
 comment on column gcl.gcltlf is		'Teléfono';
 comment on column gcl.gclpdc is		'Persona de contacto';
 comment on column gcl.gcleml is		'Correo electrónico';
 comment on column gcl.gclgcucod is  'Divisa';
+comment on column gcl.gcli18 is     'Idioma';
 comment on column gcl.gclact is		'Activo/inactivo';
 
 create index gcl_ix_01 on gcl(gclgpacod);
@@ -254,13 +287,12 @@ create table gpr (
     gprpob      varchar(80) not null default '',
     gprgpacod   varchar(2) not null,
     gprgtzid    bigint not null,
-    gprlat      varchar(20) not null default '',
-    gprlon      varchar(20) not null default '',
 	gprgeo		geography(POLYGON, 4326),
     gprtlf      varchar(20) not null default '',
     gprpdc      varchar(80) not null default '',
     gpreml      text not null default '',
     gprgcucod   varchar(5) not null default '',
+    gpri18      varchar(10) not null default '',
     gpract      smallint not null default 0 check(gpract in (0, 1))
 );
 
@@ -275,19 +307,17 @@ comment on column gpr.gprcpo is		'Código postal';
 comment on column gpr.gprpob is		'Población';
 comment on column gpr.gprgpacod is  'Código de país';
 comment on column gpr.gprgtzid is	'Id. de timezone';
-comment on column gpr.gprlat is		'Latitud';
-comment on column gpr.gprlon is		'Longitud';
 comment on column gpr.gprgeo is		'Geolocalización';
 comment on column gpr.gprtlf is		'Teléfono';
 comment on column gpr.gprpdc is		'Persona de contacto';
 comment on column gpr.gpreml is		'Correo electrónico';
 comment on column gpr.gprgcucod is  'Divisa';
+comment on column gpr.gpri18 is     'Idioma';
 comment on column gpr.gpract is		'Activo/inactivo';
 
 create index gpr_ix_01 on gpr(gprgpacod);
 create index gpr_ix_02 on gpr(gprgtzid);
 create index gpr_ix_03 on gpr(gprgcucod);
-
 
 alter table gpr add constraint gpr_fk_01 foreign key(gprgpacod) references gpa(gpacod);
 alter table gpr add constraint gpr_fk_02 foreign key(gprgtzid) references gtz(gtzid);
@@ -300,13 +330,12 @@ create table gdi (
     gdiid       bigserial primary key,
     gdieid      varchar(20) not null default '',
     gdinom      varchar(80) not null default '',
+    gdinif      varchar(20) not null default '',
     gdidir      varchar(200) not null default '',
     gdicpo      varchar(20) not null default '',
     gdipob      varchar(80) not null default '',
     gdigpacod   varchar(2) not null,
     gdigtzid    bigint not null,
-    gdilat      varchar(20) not null default '',
-    gdilon      varchar(20) not null default '',
 	gdigeo		geography(POLYGON, 4326),
     gditlf      varchar(20) not null default '',
     gdipdc      varchar(80) not null default '',
@@ -321,13 +350,12 @@ comment on table gdi is             'Direcciones';
 comment on column gdi.gdiid is		'Id. de dirección';
 comment on column gdi.gdieid is		'Código externo';
 comment on column gdi.gdinom is		'Nombre';
+comment on column gdi.gdinif is     'NIF';
 comment on column gdi.gdidir is		'Dirección';
 comment on column gdi.gdicpo is		'Código postal';
 comment on column gdi.gdipob is		'Población';
 comment on column gdi.gdigpacod is  'Código de país';
 comment on column gdi.gdigtzid is	'Id. de timezone';
-comment on column gdi.gdilat is		'Latitud';
-comment on column gdi.gdilon is		'Longitud';
 comment on column gdi.gdigeo is		'Geolocalización';
 comment on column gdi.gditlf is		'Teléfono';
 comment on column gdi.gdipdc is		'Persona de contacto';
@@ -416,13 +444,13 @@ alter table tco add constraint tco_fk_01 foreign key (tcotuocod) references tuo(
 alter table tco add constraint tco_fk_02 foreign key (tcogprid) references gpr(gprid);
 
 -------------------------------------------------
--- Barco/avión
+-- Barco/avión/tren
 
 create table tba (
 	tbaid		bigserial primary key,
 	tbanom		varchar(40) not null default '',
 	tbamat		varchar(10) not null default '',
-	tbatip		smallint not null default 0 check(tbatip in (0, 1)),
+	tbatip		smallint not null default 0 check(tbatip in (0, 1, 2)),
 	
 	tbafe0		date not null default '0001-01-01',
 	tbafe1		date not null default '0001-01-01',
@@ -433,11 +461,11 @@ create table tba (
 	
 );
 
-comment on table tba is             'Barcos y aviones';
+comment on table tba is             'Barcos, aviones, trenes';
 comment on column tba.tbaid is      'Id. interno';
 comment on column tba.tbanom is		'Nombre o ruta';
 comment on column tba.tbamat is		'Matrícula / IMO';
-comment on column tba.tbatip is		'Tipo [0=Barco, 1=Avión]';
+comment on column tba.tbatip is		'Tipo [0=Barco, 1=Avión, 2=Tren]';
 comment on column tba.tbafe0 is     'Fecha desde';
 comment on column tba.tbafe1 is     'Fecha hasta';
 comment on column tba.tbapr0id is 	'Proveedor, transportista efectivo';
@@ -451,6 +479,10 @@ create index tba_ix_03 on tba(tbapr1id);
 alter table tba add constraint tba_fk_01 foreign key (tbatuocod) references tuo(tuocod);
 alter table tba add constraint tba_fk_02 foreign key (tbapr0id) references gpr(gprid);
 alter table tba add constraint tba_fk_03 foreign key (tbapr1id) references gpr(gprid);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.0', 'es_ES', 'Barco');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.1', 'es_ES', 'Avión');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tba.tbatip.2', 'es_ES', 'Tren');
 
 -------------------------------------------------
 -- Tractoras
@@ -519,6 +551,9 @@ create index tre_ix_02 on tre(tregprid);
 alter table tre add constraint tre_fk_01 foreign key (tretuocod) references tuo(tuocod);
 alter table tre add constraint tre_fk_02 foreign key (tregprid) references gpr(gprid);
 
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tre.tretip.0', 'es_ES', 'Trailer');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('tre.tretip.1', 'es_ES', 'Dolly');
+
 -------------------------------------------------
 -- Contenedores
 
@@ -552,13 +587,13 @@ alter table tcn add constraint tcn_fk_02 foreign key (tcngprid) references gpr(g
 -- Tipos de paradas
 
 create table txp (
-    txpcod      varchar(5) not null primary key,
+    txpcod      varchar(10) not null primary key,
     txpnom      varchar(80) not null default '',
-	txpcls		smallint not null default 0 check(txpcls in (-1, 0, 1)),
+	txpcls		smallint not null default 0 check(txpcls in (0, 1, 2)),
 	txpsgn		smallint not null default 0 check(txpsgn in (-1, 0, 1)),
 	txpmin		smallint not null default 0 check(txpmin between 0 and 998),
 	txpmax		smallint not null default 0 check(txpmax between 1 and 999),
-	txppartxp	varchar(5),
+	txppartxp	varchar(10),
 	txppardif	int not null default 0,
 	txpact		smallint not null default 0 check(txpact in (0, 1))
 );
@@ -583,6 +618,10 @@ insert into txp values ('ENT', 'ENTREGA'        , 0, -1, 1, 999, 'REC', 900, 1);
 insert into txp values ('ENG', 'ENGANCHE'       , 1,  0, 2, 998, null, 0, 1);
 insert into txp values ('DES', 'DESENGANCHE'    , 1,  0, 1, 998, 'ENG', 900, 1);
 insert into txp values ('LCI', 'LAVADO CISTERNA', 1,  0, 0, 999, null, 0, 1);
+
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.0', 'es_ES', 'Principal');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.1', 'es_ES', 'Auxiliar');
+insert into gzz(gzzkey, gzzi18, gzztxt) values('txp.txpcls.2', 'es_ES', 'Retorno');
 
 -------------------------------------------------
 -- Tipos de contenedores
@@ -623,7 +662,7 @@ insert into txc values ('DRY40', 'DRY 40 PIES', 40, 3750, 27600, 67.7, 12.03, 2.
 -- Clase de envío
 
 create table txe (
-	txecod		varchar(5) not null primary key,
+	txecod		varchar(10) not null primary key,
 	txenom		varchar(80) not null default '',
 	txeact		smallint not null default 0 check(txeact in (0, 1))
 );
@@ -674,6 +713,142 @@ insert into txm values('FRB', 'FRIGO -10º', 0, '', 0, 0, 1, -10, -15, -5, 1);
 insert into txm values('FRC', 'FRIGO -20º', 0, '', 0, 0, 1, -20, -25, -15, 1);
 
 -------------------------------------------------
+-- Códigos TARIC
+
+create table tct (
+    tctcod      varchar(10) primary key,
+    tctnom      text not null default '',
+    tctact      smallint not null default 0 check(tctact in (0, 1))
+);
+
+comment on table tct is             'TARIC, códigos arancelarios';
+comment on column tct.tctcod is     'Código';
+comment on column tct.tctnom is     'Descripción';
+comment on column tct.tctact is     'Activo/inactivo';
+
+insert into tct values ('01', 'ANIMALES VIVOS', 1);
+insert into tct values ('02', 'CARNE Y DESPOJOS COMESTIBLES', 1);
+insert into tct values ('03', 'PESCADOS Y CRUSTÁCEOS; MOLUSCOS Y OTROS INVERTEBRADOS ACUÁTICOS', 1);
+insert into tct values ('04', 'LECHE Y PRODUCTOS LÁCTEOS; HUEVOS DE AVE; MIEL NATURAL; PRODUCTOS COMESTIBLES DE ORIGEN ANIMAL NO EXPRESADOS NI COMPRENDIDOS EN OTROS CAPÍTULOS', 1);
+insert into tct values ('05', 'LOS DEMÁS PRODUCTOS DE ORIGEN ANIMAL NO EXPRESADOS NI COMPRENDIDOS EN OTRA PARTE', 1);
+insert into tct values ('06', 'PLANTAS VIVAS Y PRODUCTOS DE LA FLORICULTURA', 1);
+insert into tct values ('07', 'LEGUMBRES Y HORTALIZAS, PLANTAS, RAÍCES Y TUBÉRCULOS ALIMENTICIOS', 1);
+insert into tct values ('08', 'FRUTOS COMESTIBLES, CORTEZAS DE AGRIOS O DE MELONES', 1);
+insert into tct values ('09', 'CAFÉ , TE, YERBA MATE Y ESPECIAS', 1);
+insert into tct values ('10', 'CEREALES', 1);
+insert into tct values ('11', 'PRODUCTOS DE LA MOLINERÍA, MALTA, ALMIDÓN Y FÉCULA, INULINA, GLUTEN DE TRIGO', 1);
+insert into tct values ('12', 'SEMILLAS Y FRUTOS OLEAGINOSOS, SEMILLAS Y FRUTOS DIVERSOS, PLANTAS INDUSTRIALES O MEDICINALES, PAJA Y FORRAJES', 1);
+insert into tct values ('13', 'GOMAS; RESINAS Y DEMÁS JUGOS Y EXTRACTOS VEGETALES', 1);
+insert into tct values ('14', 'MATERIAS TRENZABLES Y DEMÁS PRODUCTOS DE ORIGEN VEGETAL; NO EXPRESADOS NI COMPRENDIDOS EN OTROS CAPÍTULOS', 1);
+insert into tct values ('15', 'GRASAS Y ACEITES ANIMALES O VEGETALES, PRODUCTOS DE SU DESDOBLAMIENTO, GRASAS ALIMENTICIAS ELABORADAS, CERAS DE ORIGEN ANIMAL O VEGETAL', 1);
+insert into tct values ('16', 'PREPARACIONES DE CARNE; DE PESCADO O DE CRUSTÁCEOS; DE MOLUSCOS O DE OTROS INVERTEBRADOS ACUÁTICOS', 1);
+insert into tct values ('17', 'AZUCARES Y ARTÍCULOS DE CONFITERÍA', 1);
+insert into tct values ('18', 'CACAO Y SUS PREPARACIONES', 1);
+insert into tct values ('19', 'PREPARACIONES A BASE DE CEREALES, HARINA, ALMIDÓN, FÉCULA O LECHE, PRODUCTOS DE PASTELERÍA', 1);
+insert into tct values ('20', 'PREPARACIONES DE LEGUMBRES U HORTALIZAS, DE FRUTOS O DE OTRAS PARTES DE PLANTAS', 1);
+insert into tct values ('21', 'PREPARACIONES ALIMENTICIAS DIVERSAS', 1);
+insert into tct values ('22', 'BEBIDAS, LÍQUIDOS ALCOHÓLICOS Y VINAGRE', 1);
+insert into tct values ('23', 'RESIDUOS Y DESPERDICIOS DE LAS INDUSTRIAS ALIMENTARIAS, ALIMENTOS PREPARADOS PARA ANIMALES', 1);
+insert into tct values ('24', 'TABACO Y SUCEDÁNEOS DEL TABACO; ELABORADOS', 1);
+insert into tct values ('25', 'SAL, AZUFRE, TIERRAS Y PIEDRAS, YESOS, CALES Y CEMENTOS', 1);
+insert into tct values ('26', 'MINERALES, ESCORIAS Y CENIZAS', 1);
+insert into tct values ('27', 'COMBUSTIBLES MINERALES, ACEITES MINERALES Y PRODUCTOS DE SU DESTILACIÓN, MATERIAS BITUMINOSAS, CERAS MINERALES', 1);
+insert into tct values ('28', 'PRODUCTOS QUÍMICOS INORGÁNICOS; COMPUESTOS INORGÁNICOS U ORGÁNICOS DE LOS METALES PRECIOSOS; DE LOS ELEMENTOS RADIACTIVOS; DE LOS METALES DE LAS TIERRAS RARAS O DE ISOTOPOS', 1);
+insert into tct values ('29', 'PRODUCTOS QUÍMICOS ORGÁNICOS', 1);
+insert into tct values ('30', 'PRODUCTOS FARMACÉUTICOS', 1);
+insert into tct values ('31', 'ABONOS', 1);
+insert into tct values ('32', 'EXTRACTOS CURTIENTES O TINTÓREOS; TANINOS Y SUS DERIVADOS; PIGMENTOS Y DEMÁS MATERIAS COLORANTES; PINTURAS Y BARNICES; MASTIQUES; TINTAS', 1);
+insert into tct values ('33', 'ACEITES ESENCIALES Y RESINOIDES, PREPARACIONES DE PERFUMERÍA, DE TOCADOR O DE COSMÉTICA', 1);
+insert into tct values ('34', 'JABONES; AGENTES DE SUPERFICIE ORGÁNICOS; PREPARACIONES PARA LAVAR; PREPARACIONES LUBRICANTES; CERAS ARTIFICIALES; CERAS PREPARADAS; PRODUCTOS DE LIMPIEZA; VELAS Y ARTÍCULOS SIMILARES; PASTA PARA MODELAR; »CERAS PARA ODONTOLOGÍA» Y PREPARACIONES PARA ODONTOLOGÍA A BASE DE YESO', 1);
+insert into tct values ('35', 'MATERIAS ALBUMINOIDEAS, PRODUCTOS A BASE DE ALMIDÓN O DE FÉCULAS MODIFICADOS, COLAS, ENZIMAS', 1);
+insert into tct values ('36', 'PÓLVORAS Y EXPLOSIVOS, ARTÍCULOS DE PIROTECNIA, FÓSFOROS (CERILLAS), ALEACIONES PIROFÓRICAS, MATERIAS FLAMABLES', 1);
+insert into tct values ('37', 'PRODUCTOS FOTOGRÁFICOS O CINEMATOGRÁFICOS', 1);
+insert into tct values ('38', 'PRODUCTOS DIVERSOS DE LAS INDUSTRIAS QUÍMICAS', 1);
+insert into tct values ('39', 'MATERIAS PLÁSTICAS Y MANUFACTURAS DE ESTAS MATERIAS', 1);
+insert into tct values ('40', 'CAUCHO Y MANUFACTURAS DE CAUCHO', 1);
+insert into tct values ('41', 'PIELES (EXCEPTO LA PELETERÍA) Y CUEROS', 1);
+insert into tct values ('42', 'MANUFACTURAS DE CUERO, ARTÍCULOS DE GUARNICIONERÍA O DE TALABARTERÍA, ARTÍCULOS DE VIAJE, BOLSOS DE MANO Y CONTINENTES SIMILARES, MANUFACTURAS DE TRIPA', 1);
+insert into tct values ('43', 'PELETERÍA Y CONFECCIONES DE PELETERÍA, PELETERÍA ARTIFICIAL O FACTICIA', 1);
+insert into tct values ('44', 'MADERA, CARBÓN VEGETAL Y MANUFACTURAS DE MADERA', 1);
+insert into tct values ('45', 'CORCHO Y SUS MANUFACTURAS', 1);
+insert into tct values ('46', 'MANUFACTURAS DE ESPARTERÍA O DE CESTERÍA', 1);
+insert into tct values ('47', 'PASTA DE MADERA O DE OTRAS MATERIAS FIBROSAS CELULÓSICAS; RECUPERADAS, DESPERDICIOS Y DESECHOS DE PAPEL O CARTÓN', 1);
+insert into tct values ('48', 'PAPEL Y CARTÓN, MANUFACTURAS DE PASTA DE CELULOSA, DE PAPEL O DE CARTÓN', 1);
+insert into tct values ('49', 'PRODUCTOS EDITORIALES; DE LA PRENSA O DE OTRAS INDUSTRIAS GRAFICAS; TEXTOS MANUSCRITOS O MECANOGRAFIADOS Y PLANOS', 1);
+insert into tct values ('50', 'SEDA', 1);
+insert into tct values ('51', 'LANA Y PELO FINO U ORDINARIO, HILADOS Y TEJIDOS DE CRIN', 1);
+insert into tct values ('52', 'ALGODÓN', 1);
+insert into tct values ('53', 'LAS DEMÁS FIBRAS TEXTILES VEGETALES; HILADOS DE PAPEL Y TEJIDOS DE HILADOS DE PAPEL', 1);
+insert into tct values ('54', 'FILAMENTOS SINTÉTICOS O ARTIFICIALES', 1);
+insert into tct values ('55', 'FIBRAS SINTÉTICAS O ARTIFICIALES DISCONTINUAS', 1);
+insert into tct values ('56', 'GUATA, FIELTRO Y TELAS SIN TEJER, HILADOS ESPECIALES, CORDELES, CUERDAS Y CORDAJES, ARTÍCULOS DE CORDELERÍA', 1);
+insert into tct values ('57', 'ALFOMBRAS Y DEMÁS REVESTIMIENTOS PARA EL SUELO; DE MATERIAS TEXTILES', 1);
+insert into tct values ('58', 'TEJIDOS ESPECIALES, SUPERFICIES TEXTILES CON PELO INSERTADO, ENCAJES, TAPICERÍA, PASAMANERÍA, BORDADOS', 1);
+insert into tct values ('59', 'TEJIDOS IMPREGNADOS, RECUBIERTOS, REVESTIDOS O ESTRATIFICADOS, ARTÍCULOS TÉCNICOS DE MATERIAS TEXTILES', 1);
+insert into tct values ('60', 'TEJIDOS DE PUNTO', 1);
+insert into tct values ('61', 'PRENDAS Y COMPLEMENTOS DE VESTIR, DE PUNTO', 1);
+insert into tct values ('62', 'PRENDAS Y COMPLEMENTOS DE VESTIR, EXCEPTO LOS DE PUNTO', 1);
+insert into tct values ('63', 'LOS DEMÁS ARTÍCULOS TEXTILES CONFECCIONADOS; SURTIDOS; PRENDERÍA Y TRAPOS', 1);
+insert into tct values ('64', 'CALZADO; POLAINAS; BOTINES Y ARTÍCULOS ANÁLOGOS; PARTES DE ESTOS ARTÍCULOS', 1);
+insert into tct values ('65', 'ARTÍCULOS DE SOMBRERERÍA Y SUS PARTES', 1);
+insert into tct values ('66', 'PARAGUAS; SOMBRILLAS; QUITASOLES; BASTONES-ASIENTO; LÁTIGOS; FUSTAS Y SUS PARTES', 1);
+insert into tct values ('67', 'PLUMAS Y PLUMÓN PREPARADOS Y ARTÍCULOS DE PLUMAS O PLUMÓN, FLORES ARTIFICIALES, MANUFACTURAS DE CABELLOS', 1);
+insert into tct values ('68', 'MANUFACTURAS DE PIEDRA; YESO; CEMENTO; AMIANTO; MICA O MATERIAS ANÁLOGAS', 1);
+insert into tct values ('69', 'PRODUCTOS CERÁMICOS', 1);
+insert into tct values ('70', 'VIDRIO Y MANUFACTURAS DE VIDRIO', 1);
+insert into tct values ('71', 'PERLAS FINAS O CULTIVADAS, PIEDRAS PRECIOSAS Y SEMIPRECIOSAS O SIMILARES, METALES PRECIOSOS, CHAPADOS DE METALES PRECIOSOS Y MANUFACTURAS DE ESTAS MATERIAS; BISUTERÍA; MONEDAS', 1);
+insert into tct values ('72', 'FUNDICIÓN, HIERRO Y ACERO', 1);
+insert into tct values ('73', 'MANUFACTURAS DE FUNDICIÓN, DE HIERRO O DE ACERO', 1);
+insert into tct values ('74', 'COBRE Y MANUFACTURAS DE COBRE', 1);
+insert into tct values ('75', 'NÍQUEL Y MANUFACTURAS DE NÍQUEL', 1);
+insert into tct values ('76', 'ALUMINIO Y MANUFACTURAS DE ALUMINIO', 1);
+insert into tct values ('78', 'PLOMO Y MANUFACTURAS DE PLOMO', 1);
+insert into tct values ('79', 'CINC Y MANUFACTURAS DE CINC', 1);
+insert into tct values ('80', 'ESTAÑO Y MANUFACTURAS DE ESTAÑO', 1);
+insert into tct values ('81', 'LOS DEMÁS METALES COMUNES; »CERMETS»; MANUFACTURAS DE ESTAS MATERIAS', 1);
+insert into tct values ('82', 'HERRAMIENTAS Y ÚTILES ARTÍCULOS DE CUCHILLERÍA Y CUBIERTOS DE MESA, DE METALES COMUNES, PARTES DE ESTOS ARTÍCULOS, DE METALES COMUNES', 1);
+insert into tct values ('84', 'REACTORES NUCLEARES; CALDERAS; MAQUINAS; APARATOS Y ARTEFACTOS MECÁNICOS; PARTES DE ESTAS MAQUINAS O APARATOS', 1);
+insert into tct values ('85', 'MÁQUINAS; APARATOS Y MATERIAL ELÉCTRICO Y SUS PARTES; APARATOS DE GRABACIÓN O REPRODUCCIÓN DE SONIDO; APARATOS DE GRABACIÓN O REPRODUCCIÓN DE IMÁGENES Y SONIDO EN TELEVISIÓN; Y LAS PARTES Y ACCESORIOS DE ESOS APARATOS', 1);
+insert into tct values ('86', 'VEHÍCULOS Y MATERIAL PARA VÍAS FÉRREAS O SIMILARES Y SUS PARTES; APARATOS MECÁNICOS (INCLUSO ELECTROMECÁNICOS) DE SEÑALIZACIÓN PARA VÍAS DE COMUNICACIÓN', 1);
+insert into tct values ('87', 'VEHÍCULOS AUTOMÓVILES; TRACTORES; CICLOS Y DEMÁS VEHÍCULOS TERRESTRES; SUS PARTES Y ACCESORIOS', 1);
+insert into tct values ('88', 'NAVEGACIÓN AÉREA O ESPACIAL', 1);
+insert into tct values ('89', 'NAVEGACIÓN MARÍTIMA O FLUVIAL', 1);
+insert into tct values ('90', 'INSTRUMENTOS Y APARATOS DE ÓPTICA, FOTOGRAFÍA O CINEMATOGRAFÍA, DE MEDIDA, CONTROL O DE PRECISIÓN, INSTRUMENTOS Y APARATOS MEDICO QUIRÚRGICOS, PARTES DE ESTOS INSTRUMENTOS O APARATOS', 1);
+insert into tct values ('91', 'RELOJERÍA', 1);
+insert into tct values ('92', 'INSTRUMENTOS MUSICALES, PARTES Y ACCESORIOS DE ESTOS INSTRUMENTOS', 1);
+insert into tct values ('93', 'ARMAS Y MUNICIONES Y SUS PARTES Y ACCESORIOS', 1);
+insert into tct values ('94', 'MUEBLES, MOBILIARIO MÉDICO QUIRÚRGICO, ARTÍCULOS DE CAMA Y SIMILARES, APARATOS DE ALUMBRADO NO EXPRESADOS NI COMPRENDIDOS EN OTROS CAPÍTULOS, ANUNCIOS, LETREROS Y PLACAS INDICADORAS, LUMINOSOS, Y ARTÍCULOS SIMILARES, CONSTRUCCIONES PREFABRICADAS', 1);
+insert into tct values ('95', 'JUGUETES, JUEGOS Y ARTÍCULOS PARA RECREO O PARA DEPORTE, PARTES Y ACCESORIOS', 1);
+insert into tct values ('97', 'OBJETOS DE ARTE; DE COLECCIÓN O DE ANTIGÜEDAD', 1);
+insert into tct values ('99', 'ENVÍOS FORMADOS POR UN CONJUNTO HETEROGÉNEO DE MERCANCÍAS AFORABLES POR DIFERENTES PARTIDAS ARANCELARIAS Y SUPUESTOS NO CONTEMPLADOS EN EL ARANCEL ADUANERO ESPECÍFICAMENTE', 1);
+
+-------------------------------------------------
+-- Incoterm
+
+create table tit (
+    titcod      varchar(10) primary key,
+    titnom      varchar(80) not null default '',
+	titact		smallint not null default 0 check(titact in (0, 1))
+);
+
+comment on table tit is             'Incoterm';
+comment on column tit.titcod is     'Código';
+comment on column tit.titnom is     'Descripción';
+comment on column tit.titact is     'Activo/inactivo';
+
+insert into tit values('EXW', 'EX WORKS', 1);
+insert into tit values('FAS', 'FREE ALONGSIDE SHIP', 1);
+insert into tit values('FOB', 'FREE ON BOARD', 1);
+insert into tit values('FCA', 'FREE CARRIER', 1);
+insert into tit values('CFR', 'COST AND FREIGHT', 1);
+insert into tit values('CIF', 'COST, INSURANCE AND FREIGHT', 1);
+insert into tit values('CPT', 'CARRIAGE PAID TO', 1);
+insert into tit values('CIP', 'CARRIAGE AND INSURANCE PAID', 1);
+insert into tit values('DPU', 'DELIVERED AT PLACE AND UNLOADED', 1);
+insert into tit values('DAP', 'DELIVERED AT PLACE', 1);
+insert into tit values('DDP', 'DELIVERED DUTY PAID', 1);
+
+-------------------------------------------------
 -- Direcciones de transporte por cliente
 
 create table tdi (
@@ -683,8 +858,10 @@ create table tdi (
     tdieid      varchar(20) not null,
     tdiobs      varchar(80) not null default '',
 	tditxmcod	varchar(20),
-	tditxecod	varchar(5),
-    tdipartxp   varchar(5),
+	tditxecod	varchar(10),
+    tditctcod   varchar(10),
+    tdititcod   varchar(10),
+    tdipartxp   varchar(10),
     tdipardif   int not null default 0,	
     tdipareid   varchar(20) not null default ''
 );
@@ -697,6 +874,8 @@ comment on column tdi.tdieid is     'Código externo';
 comment on column tdi.tdiobs is     'Observaciones';
 comment on column tdi.tditxmcod is	'Tipo de mercancía';
 comment on column tdi.tditxecod is	'Tipo de envío';
+comment on column tdi.tditctcod is  'Código TARIC';
+comment on column tdi.tdititcod is  'Incoterm';
 comment on column tdi.tdipartxp is  'Tipo de parada automática';
 comment on column tdi.tdipardif is  'Diferencia en segundos (0=No generar)';
 comment on column tdi.tdipareid is  'Código externo del lugar de parada';
@@ -706,12 +885,16 @@ create index tdi_ix_02 on tdi(tdigclid);
 create index tdi_ix_03 on tdi(tdipartxp);
 create index tdi_ix_04 on tdi(tditxmcod);
 create index tdi_ix_05 on tdi(tditxecod);
+create index tdi_ix_06 on tdi(tditctcod);
+create index tdi_ix_07 on tdi(tdititcod);
 
 alter table tdi add constraint tdi_fk_01 foreign key(tdigdiid) references gdi(gdiid);
 alter table tdi add constraint tdi_fk_02 foreign key(tdigclid) references gcl(gclid);
 alter table tdi add constraint tdi_fk_03 foreign key(tdipartxp) references txp(txpcod);
 alter table tdi add constraint tdi_fk_04 foreign key(tditxmcod) references txm(txmcod);
 alter table tdi add constraint tdi_fk_05 foreign key(tditxecod) references txe(txecod);
+alter table tdi add constraint tdi_fk_06 foreign key(tditctcod) references tct(tctcod);
+alter table tdi add constraint tdi_fk_07 foreign key(tdititcod) references tit(titcod);
 
 -------------------------------------------------
 -- Cargas
@@ -970,7 +1153,11 @@ create table ttd (
 	ttdpos		integer not null default 0 check(ttdpos between 0 and 2),
 	ttdtreid	bigint,
 	ttdtremat	varchar(20) not null default '',
-	ttdtrenfl	varchar(20) not null default ''
+	ttdtrenfl	varchar(20) not null default '',
+    ttdtmp      smallint not null default 0 check(ttdtmp in (0, 1)),
+    ttdtmpstp   numeric(5,2) not null default 0,
+    ttdtmpmin   numeric(5,2) not null default 0,
+    ttdtmpmax   numeric(5,2) not null default 0
 );
 
 comment on table ttd is				'Transportes, remolques';
@@ -980,6 +1167,10 @@ comment on column ttd.ttdpos is		'Posición [0, 1, 2]';
 comment on column ttd.ttdtreid is	'Tractora, id';
 comment on column ttd.ttdtremat is	'Tractora, matrícula';
 comment on column ttd.ttdtrenfl is	'Tractora, número de flota';
+comment on column ttd.ttdtmp is     'TMP, temperatura controlada';
+comment on column ttd.ttdtmpstp is  'TMP, set point';
+comment on column ttd.ttdtmpmin is  'TMP, mínimo';
+comment on column ttd.ttdtmpmax is  'TMP, máximo';
 
 create index ttd_ix_01 on ttd(ttdttaid);
 create index ttd_ix_02 on ttd(ttdtreid);
@@ -1003,7 +1194,7 @@ create table tpa (
     tpattaid    bigint,
     tpattaseq   int not null default 0,
 
-    tpatxpcod   varchar(5) not null default '',
+    tpatxpcod   varchar(10) not null default '',
     tpatxpcls   smallint not null default 0,
     tpatxpsgn   smallint not null default 0,
 
@@ -1017,8 +1208,6 @@ create table tpa (
     tpagdigpa   varchar(2) not null,
     tpagdigtz   bigint not null,
     tpagdipcp   varchar(20) not null default '',
-    tpagdilat   varchar(20) not null default '',
-    tpagdilon   varchar(20) not null default '',
 	tpagdigeo	geography(POLYGON, 4326),
     tpagditlf   varchar(20) not null default '',
     tpagdipdc   varchar(80) not null default '',
