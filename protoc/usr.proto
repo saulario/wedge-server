@@ -1,0 +1,34 @@
+// Definición del servicio de usuarios
+
+syntax = "proto3";
+
+package wedge.usr;
+
+import "types.proto";
+
+message LoginRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+    optional wedge.types.ValidationError validation_error = 9999;
+}
+
+message PKRequest {
+    uint64 usrid = 1;
+}
+
+message DeleteResponse {
+    int32 count = 1;
+    optional wedge.types.ValidationError validation_error = 9999;    
+}
+
+service Service {
+    rpc Login(LoginRequest) returns(LoginResponse);
+    rpc Delete(PKRequest) returns(DeleteResponse);
+    rpc Insert(wedge.types.Usr) returns(wedge.types.Usr);
+    rpc Read(PKRequest) returns(wedge.types.Usr);
+    rpc Update(wedge.types.Usr) returns(wedge.types.Usr);
+}

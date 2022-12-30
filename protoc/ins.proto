@@ -1,0 +1,23 @@
+// Definición del servicio de usuarios
+
+syntax = "proto3";
+
+package wedge.ins;
+
+import "types.proto";
+
+message PKRequest {
+    uint64 insid = 1;
+}
+
+message DeleteResponse {
+    int32 count = 1;
+    optional wedge.types.ValidationError validation_error = 9999;    
+}
+
+service Service {
+    rpc Delete(PKRequest) returns(DeleteResponse);
+    rpc Insert(wedge.types.Ins) returns(wedge.types.Ins);
+    rpc Read(PKRequest) returns(wedge.types.Ins);
+    rpc Update(wedge.types.Ins) returns(wedge.types.Ins);
+}

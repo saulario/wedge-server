@@ -1,0 +1,65 @@
+// Definición de tipos
+
+syntax = "proto3";
+
+package wedge.types;
+
+//-----------------------------------------------------------------------------
+// tipos genéricos
+
+message ValidationError {
+    string source = 1;
+    string msgid = 2;
+    string msg = 3;
+    string exp = 4;
+}
+
+//-----------------------------------------------------------------------------
+// tipos definidos en la base de datos de control
+
+message Cli {
+    int64 cliid = 1;
+    string clinom = 2;
+    int32 cliact = 3;
+}
+
+message Ins {
+    int64 insid = 1;
+    string insnom = 2;
+    int64 inscliid = 3;
+    string insurl = 4;
+    int32 insact  = 5;
+}
+
+message Ses {
+    string sescod = 1;
+    int64 sesusrid = 2;
+    int64 sesinsid = 3;
+    string sesfcr = 4;
+    string sesful = 5;
+    int32 sesact = 6;
+}
+
+message Sus {
+    int64 susid = 1;
+    int64 sususrid = 2;
+    int64 susinsid = 3;
+    string susfcr = 4;
+    int32 susact = 5;
+}
+
+message Usr {
+    int64 usrid = 1;
+    string usrcod = 2;
+    string usrnom = 3;
+    string usrpwd = 4;
+    string usrfcr = 5;
+    string usri18 = 6;
+    string usreml = 7;
+    int32 usract = 8;
+}
+
+//-----------------------------------------------------------------------------
+// tipos definidos en la base de datos de instancia
+
+
