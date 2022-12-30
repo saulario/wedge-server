@@ -16,8 +16,8 @@ message DeleteResponse {
 }
 
 service Service {
-    rpc Delete(PKRequest) returns(DeleteResponse);
-    rpc Insert(wedge.types.Ins) returns(wedge.types.Ins);
-    rpc Read(PKRequest) returns(wedge.types.Ins);
-    rpc Update(wedge.types.Ins) returns(wedge.types.Ins);
+    rpc Delete(PKRequest) returns(DeleteResponse) {}
+    rpc Insert(wedge.types.Ins) returns(wedge.types.Ins) {}
+    rpc Read(PKRequest) returns(wedge.types.Ins) {}
+    rpc Update(wedge.types.Ins) returns(wedge.types.Ins) {}
 }

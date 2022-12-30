@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 import types_pb2 as types__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tusr.proto\x12\twedge.usr\x1a\x0btypes.proto\"2\n\x0cLoginRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"q\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12<\n\x10validation_error\x18\x8fN \x01(\x0b\x32\x1c.wedge.types.ValidationErrorH\x00\x88\x01\x01\x42\x13\n\x11_validation_error\"\x1a\n\tPKRequest\x12\r\n\x05usrid\x18\x01 \x01(\x04\"r\n\x0e\x44\x65leteResponse\x12\r\n\x05\x63ount\x18\x01 \x01(\x05\x12<\n\x10validation_error\x18\x8fN \x01(\x0b\x32\x1c.wedge.types.ValidationErrorH\x00\x88\x01\x01\x42\x13\n\x11_validation_error2\x8c\x02\n\x07Service\x12:\n\x05Login\x12\x17.wedge.usr.LoginRequest\x1a\x18.wedge.usr.LoginResponse\x12\x39\n\x06\x44\x65lete\x12\x14.wedge.usr.PKRequest\x1a\x19.wedge.usr.DeleteResponse\x12,\n\x06Insert\x12\x10.wedge.types.Usr\x1a\x10.wedge.types.Usr\x12.\n\x04Read\x12\x14.wedge.usr.PKRequest\x1a\x10.wedge.types.Usr\x12,\n\x06Update\x12\x10.wedge.types.Usr\x1a\x10.wedge.types.Usrb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tusr.proto\x12\twedge.usr\x1a\x0btypes.proto\"2\n\x0cLoginRequest\x12\x10\n\x08username\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\"q\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12<\n\x10validation_error\x18\x8fN \x01(\x0b\x32\x1c.wedge.types.ValidationErrorH\x00\x88\x01\x01\x42\x13\n\x11_validation_error\"\x1a\n\tPKRequest\x12\r\n\x05usrid\x18\x01 \x01(\x04\"r\n\x0e\x44\x65leteResponse\x12\r\n\x05\x63ount\x18\x01 \x01(\x05\x12<\n\x10validation_error\x18\x8fN \x01(\x0b\x32\x1c.wedge.types.ValidationErrorH\x00\x88\x01\x01\x42\x13\n\x11_validation_error2\x96\x02\n\x07Service\x12<\n\x05Login\x12\x17.wedge.usr.LoginRequest\x1a\x18.wedge.usr.LoginResponse\"\x00\x12;\n\x06\x44\x65lete\x12\x14.wedge.usr.PKRequest\x1a\x19.wedge.usr.DeleteResponse\"\x00\x12.\n\x06Insert\x12\x10.wedge.types.Usr\x1a\x10.wedge.types.Usr\"\x00\x12\x30\n\x04Read\x12\x14.wedge.usr.PKRequest\x1a\x10.wedge.types.Usr\"\x00\x12.\n\x06Update\x12\x10.wedge.types.Usr\x1a\x10.wedge.types.Usr\"\x00\x62\x06proto3')
 
 
 
@@ -64,5 +64,5 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _DELETERESPONSE._serialized_start=232
   _DELETERESPONSE._serialized_end=346
   _SERVICE._serialized_start=349
-  _SERVICE._serialized_end=617
+  _SERVICE._serialized_end=627
 # @@protoc_insertion_point(module_scope)

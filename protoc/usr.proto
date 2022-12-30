@@ -26,9 +26,9 @@ message DeleteResponse {
 }
 
 service Service {
-    rpc Login(LoginRequest) returns(LoginResponse);
-    rpc Delete(PKRequest) returns(DeleteResponse);
-    rpc Insert(wedge.types.Usr) returns(wedge.types.Usr);
-    rpc Read(PKRequest) returns(wedge.types.Usr);
-    rpc Update(wedge.types.Usr) returns(wedge.types.Usr);
+    rpc Login(LoginRequest) returns(LoginResponse) {}
+    rpc Delete(PKRequest) returns(DeleteResponse) {}
+    rpc Insert(wedge.types.Usr) returns(wedge.types.Usr) {}
+    rpc Read(PKRequest) returns(wedge.types.Usr) {}
+    rpc Update(wedge.types.Usr) returns(wedge.types.Usr) {}
 }

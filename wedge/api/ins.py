@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import logging
 
+import grpc
+
 import ins_pb2_grpc
 
 from ins_pb2_grpc import add_ServiceServicer_to_server
@@ -19,10 +21,11 @@ class Service(ins_pb2_grpc.ServiceServicer):
         """
         return None
 
-    def Read(self, request, context=None):
+    def Read(self, request, context):
         """
         """
-        return ins_pb2_grpc.types__pb2.Ins()
+        ins = ins_pb2_grpc.types__pb2.Ins(insid=1, insnom="Nombre de instancia")
+        return ins
 
     def Update(self, request, context):
         """
